@@ -29,6 +29,6 @@ public class Property {
     @Column(nullable = false, name = "name")
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "property")
     private List<Apartment> apartments;
 }
