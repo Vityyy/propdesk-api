@@ -2,6 +2,7 @@ package devs.group5.rms.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.UUID;
@@ -24,6 +25,7 @@ public class Apartment {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @NotNull
     @JoinColumn(name = "property_id")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Property property;
