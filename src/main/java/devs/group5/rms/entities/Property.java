@@ -26,6 +26,10 @@ public class Property {
     @Column(nullable = false, name = "name")
     private String name;
 
+    @NotBlank
+    @Column(nullable = false, name = "adress")
+    private String address;
+
     @NotNull
     @JoinColumn(name = "owner_id")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
