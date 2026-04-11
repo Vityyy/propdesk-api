@@ -30,6 +30,7 @@ public class Apartment {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Property property;
 
+    @JoinColumn(name = "tenant_id")
     @OneToOne(mappedBy = "apartment")
     private Tenant tenant;
 }
