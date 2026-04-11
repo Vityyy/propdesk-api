@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Autowired)
-class AuthService {
+public class AuthService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
     @Transactional
-    String login(String name) {
+    public String login(String name) {
         val user = userRepository.findByName(name).orElseThrow(() -> new BadCredentialsException("User does not exist"));
         return jwtService.generate(user.getId());
     }
