@@ -13,9 +13,9 @@ import java.util.UUID;
 @Setter
 @ToString
 @NoArgsConstructor
-@Table(name = "properties")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
+@Table(name = "properties", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "address", "owner_id"}))
 public class Property {
     @Id
     @EqualsAndHashCode.Include
@@ -27,7 +27,7 @@ public class Property {
     private String name;
 
     @NotBlank
-    @Column(nullable = false, name = "adress")
+    @Column(nullable = false, name = "address")
     private String address;
 
     @NotNull
