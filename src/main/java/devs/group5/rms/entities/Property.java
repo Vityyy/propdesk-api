@@ -16,10 +16,6 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
 public class Property {
-    @JoinColumn(name = "owner_id")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Owner owner;
-
     @Id
     @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,6 +24,10 @@ public class Property {
     @NotBlank
     @Column(nullable = false, name = "name")
     private String name;
+
+    @JoinColumn(name = "owner_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Owner owner;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Apartment> apartments;
