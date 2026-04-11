@@ -30,9 +30,7 @@ public class Owner extends User {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        Owner owner = (Owner) o;
-        return super.equals(owner);
+        return super.equals(o);
     }
 
     @Override
