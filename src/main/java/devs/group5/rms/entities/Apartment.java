@@ -3,8 +3,11 @@ package devs.group5.rms.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -33,4 +36,15 @@ public class Apartment {
     @JoinColumn(name = "tenant_id")
     @OneToOne(mappedBy = "apartment")
     private Tenant tenant;
+
+    @Column(name = "due_date")
+    private LocalDate dueDate;
+
+    @Positive
+    @Column(name = "amount_due")
+    private BigDecimal amountDue;
+
+    @Column(name = "payment_status")
+    @Enumerated(value = EnumType.STRING)
+    private PaymentStatus paymentStatus;
 }
