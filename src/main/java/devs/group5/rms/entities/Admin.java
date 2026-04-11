@@ -14,7 +14,7 @@ import java.util.UUID;
 @ToString
 public class Admin extends User {
 
-    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY)
     private List<Owner> owners;
 
     @Builder
