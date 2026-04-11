@@ -17,7 +17,7 @@ public class Owner extends User {
     @ManyToOne(fetch = FetchType.LAZY)
     private Admin admin;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Property> properties;
 
     @Builder
