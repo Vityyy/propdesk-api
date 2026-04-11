@@ -26,7 +26,7 @@ public class Expense {
     @NotBlank
     @Column(nullable = false, name = "category")
     private String category;
-    
+
     @NotBlank
     @Column(nullable = false, name = "category")
     private String description;
@@ -45,7 +45,7 @@ public class Expense {
     private PaymentStatus paymentStatus;
 
     @NotNull
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = false)
     private Property property;
 }
