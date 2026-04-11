@@ -12,9 +12,9 @@ import java.util.UUID;
 @Setter
 @ToString
 @NoArgsConstructor
-@Table(name = "apartments")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
+@Table(name = "apartments", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "property_id"}))
 public class Apartment {
     @Id
     @EqualsAndHashCode.Include
