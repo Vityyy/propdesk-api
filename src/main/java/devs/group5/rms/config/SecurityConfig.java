@@ -1,4 +1,4 @@
-package devs.group5.rms;
+package devs.group5.rms.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

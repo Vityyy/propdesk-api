@@ -1,4 +1,4 @@
-package devs.group5.rms;
+package devs.group5.rms.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import devs.group5.rms.properties.JwtProperties;
