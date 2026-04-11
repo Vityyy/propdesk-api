@@ -12,8 +12,8 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
+@ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
 @Table(name = "expenses", uniqueConstraints = @UniqueConstraint(columnNames = {"description", "property_id"}))
@@ -45,6 +45,7 @@ public class Expense {
     private PaymentStatus paymentStatus;
 
     @NotNull
+    @ToString.Exclude
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = false)
     private Property property;

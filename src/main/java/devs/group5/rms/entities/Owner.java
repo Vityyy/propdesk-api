@@ -10,18 +10,19 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "owners")
-@NoArgsConstructor
 @Getter
 @Setter
-@ToString
+@NoArgsConstructor
+@Table(name = "owners")
+@ToString(callSuper = true)
 public class Owner extends User {
+    @ToString.Exclude
     @JoinColumn(name = "admin_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Admin admin;
 
-    @Positive
     @NotNull
+    @Positive
     @Column(name = "admin_cut", nullable = false)
     private BigDecimal adminCut;
 

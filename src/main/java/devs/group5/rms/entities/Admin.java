@@ -1,19 +1,23 @@
 package devs.group5.rms.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "admins")
-@NoArgsConstructor
 @Getter
 @Setter
-@ToString
+@NoArgsConstructor
+@Table(name = "admins")
+@ToString(callSuper = true)
 public class Admin extends User {
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "admin", fetch = FetchType.LAZY)
     private List<Owner> owners;
 

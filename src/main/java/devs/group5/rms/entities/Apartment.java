@@ -29,10 +29,12 @@ public class Apartment {
     private String name;
 
     @NotNull
+    @ToString.Exclude
     @JoinColumn(name = "property_id")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Property property;
 
+    @ToString.Exclude
     @JoinColumn(name = "tenant_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Tenant tenant;

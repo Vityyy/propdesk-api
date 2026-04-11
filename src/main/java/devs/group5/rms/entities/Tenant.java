@@ -10,9 +10,9 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @Table(name = "tenant")
+@ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
 public class Tenant {

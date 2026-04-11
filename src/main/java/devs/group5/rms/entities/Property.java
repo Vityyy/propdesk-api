@@ -11,8 +11,8 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
+@ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
 @Table(name = "properties", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "address", "owner_id"}))
@@ -31,13 +31,14 @@ public class Property {
     private String address;
 
     @NotNull
+    @ToString.Exclude
     @JoinColumn(name = "owner_id")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Owner owner;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Apartment> apartments;
-
+    
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Expense> expenses;
 }
