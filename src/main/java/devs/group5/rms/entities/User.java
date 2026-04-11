@@ -2,6 +2,8 @@ package devs.group5.rms.entities;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.UUID;
@@ -20,7 +22,7 @@ public abstract class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-
+    @NotBlank
     @Column(nullable = false, name = "name")
     private String name;
 
