@@ -1,6 +1,7 @@
 package devs.group5.rms.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.UUID;
@@ -18,6 +19,10 @@ public class Apartment {
     @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @NotBlank
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @JoinColumn(name = "property_id")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
