@@ -1,7 +1,9 @@
 package devs.group5.rms.controllers;
 
 import devs.group5.rms.dtos.LoginRequest;
+import devs.group5.rms.dtos.SignUpRequest;
 import devs.group5.rms.dtos.TokenResponse;
+import devs.group5.rms.dtos.UserResponse;
 import devs.group5.rms.services.AuthService;
 import lombok.AllArgsConstructor;
 import lombok.val;
@@ -22,5 +24,19 @@ class AuthController {
         val name = request.name();
         val token = authService.login(name);
         return new TokenResponse(token);
+    }
+
+    @PostMapping("/signup/admin")
+    public UserResponse adminSignUp(@RequestBody SignUpRequest request) {
+        val name = request.name();
+        val admin = authService.signInAdmin(name);
+        return new UserResponse(admin.getId(), admin.getName());
+    }
+
+    @PostMapping("/signup/owner")
+    public UserResponse ownerSignUp(@RequestBody SignUpRequest request) {
+        val name = request.name();
+        val owner = authService.signInOwner(name);
+        return new UserResponse(owner.getId(), owner.getName());
     }
 }
