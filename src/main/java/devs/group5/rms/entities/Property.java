@@ -2,6 +2,7 @@ package devs.group5.rms.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class Property {
     @Column(nullable = false, name = "name")
     private String name;
 
+    @NotNull
     @JoinColumn(name = "owner_id")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Owner owner;
