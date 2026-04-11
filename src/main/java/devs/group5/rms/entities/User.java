@@ -26,7 +26,7 @@ public abstract class User {
     @Column(nullable = false, name = "name")
     private String name;
 
-    protected User(@Nullable UUID id, String name) {
+    protected User(UUID id, String name) {
         this.id = id;
         this.name = name;
     }
