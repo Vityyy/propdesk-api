@@ -21,7 +21,7 @@ public class Owner extends User {
     private List<Property> properties;
 
     @Builder
-    public Owner(UUID id, String name, Admin admin, List<Property> properties) {
+    private Owner(UUID id, String name, Admin admin, List<Property> properties) {
         super(id, name);
         this.admin = admin;
         this.properties = properties;
