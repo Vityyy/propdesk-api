@@ -26,9 +26,7 @@ public class Admin extends User {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        Admin owner = (Admin) o;
-        return super.equals(owner);
+        return super.equals(o);
     }
 
     @Override
