@@ -26,7 +26,7 @@ public class Property {
     private String name;
 
     @JoinColumn(name = "owner_id")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Owner owner;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
