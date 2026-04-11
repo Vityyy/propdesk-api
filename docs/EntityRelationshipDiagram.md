@@ -39,14 +39,14 @@ erDiagram
         name Text UK
         property_id UUID UK, FK
         tenant_id UUID FK
+        due_date Date
+        amount_due Decimal
+        payment_status Enumeration
     }
 
     TENANTS {
         id UUID PK
         name Text
-        due_date Date
-        amount_due Decimal
-        status Enumeration
         email Text
         phone_number Text
     }

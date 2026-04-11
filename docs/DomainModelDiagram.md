@@ -23,14 +23,14 @@ classDiagram
     class Apartment {
         id [id]
         name
+        due date
+        amount due
+        payment_status
     }
     
     class Tenant {
         id [id]
         name
-        due date
-        amount due
-        status
         email
         phone_number
     }
