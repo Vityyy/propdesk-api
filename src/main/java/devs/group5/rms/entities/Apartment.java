@@ -34,7 +34,7 @@ public class Apartment {
     private Property property;
 
     @JoinColumn(name = "tenant_id")
-    @OneToOne(mappedBy = "apartment")
+    @ManyToOne
     private Tenant tenant;
 
     @Column(name = "due_date")

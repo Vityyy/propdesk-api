@@ -3,6 +3,7 @@ package devs.group5.rms.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -22,7 +23,6 @@ public class Tenant {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @OneToOne
-    @JoinColumn(name = "apartment_id")
-    private Apartment apartment;
+    @OneToMany(mappedBy = "tenant")
+    private List<Apartment> apartments;
 }
