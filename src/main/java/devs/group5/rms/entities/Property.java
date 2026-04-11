@@ -1,6 +1,7 @@
 package devs.group5.rms.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class Property {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @NotBlank
     @Column(nullable = false, name = "name")
     private String name;
 
