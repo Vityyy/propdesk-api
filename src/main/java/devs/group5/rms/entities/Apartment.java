@@ -34,7 +34,7 @@ public class Apartment {
     private Property property;
 
     @JoinColumn(name = "tenant_id")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Tenant tenant;
 
     @Column(name = "due_date")
