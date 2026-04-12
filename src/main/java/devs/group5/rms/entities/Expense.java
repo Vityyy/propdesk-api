@@ -28,7 +28,7 @@ public class Expense {
     private String category;
 
     @NotBlank
-    @Column(nullable = false, name = "category")
+    @Column(nullable = false, name = "description")
     private String description;
 
     @NotNull
