@@ -5,5 +5,9 @@ import lombok.ToString;
 @ToString
 public enum Role {
     ADMIN,
-    OWNER
+    OWNER;
+
+    public String asAuthority() {
+        return "ROLE_" + name();
+    }
 }

@@ -1,8 +1,11 @@
 package devs.group5.rms.config;
 
+import devs.group5.rms.converters.JwtAuthConverter;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -11,7 +14,10 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@AllArgsConstructor(onConstructor_ = @Autowired)
 public class SecurityConfig {
+    private final JwtAuthConverter jwtAuthConverter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
@@ -28,9 +34,10 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .oauth2ResourceServer(oauth ->
-                        oauth.jwt(Customizer.withDefaults())
+                        oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter))
                 );
 
         return http.build();
+
     }
 }
