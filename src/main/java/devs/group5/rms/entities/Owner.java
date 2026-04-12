@@ -46,4 +46,9 @@ public class Owner extends User {
     public int hashCode() {
         return super.hashCode();
     }
+
+    @Override
+    public Role getRole() {
+        return Role.OWNER;
+    }
 }
