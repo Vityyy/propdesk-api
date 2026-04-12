@@ -1,5 +1,6 @@
 package devs.group5.rms.services;
 
+import devs.group5.rms.entities.Role;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -20,11 +21,12 @@ public class JwtService {
         this.accessDuration = accessDuration;
     }
 
-    public String generate(@NonNull UUID userId) {
+    public String generate(@NonNull UUID userId, @NonNull Role role) {
         Instant now = Instant.now();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(userId.toString())
+                .claim("role", role)
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(accessDuration))
                 .build();
