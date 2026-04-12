@@ -26,17 +26,17 @@ public class AuthController {
         return new TokenResponse(token);
     }
 
-    @PostMapping("/signup/admin")
-    public UserResponse adminSignUp(@RequestBody SignUpRequest request) {
+    @PostMapping("/register/admin")
+    public UserResponse registerAdmin(@RequestBody SignUpRequest request) {
         val name = request.name();
-        val admin = authService.signInAdmin(name);
+        val admin = authService.registerAdmin(name);
         return new UserResponse(admin.getId(), admin.getName());
     }
 
-    @PostMapping("/signup/owner")
-    public UserResponse ownerSignUp(@RequestBody SignUpRequest request) {
+    @PostMapping("/register/owner")
+    public UserResponse registerOwner(@RequestBody SignUpRequest request) {
         val name = request.name();
-        val owner = authService.signInOwner(name);
+        val owner = authService.registerOwner(name);
         return new UserResponse(owner.getId(), owner.getName());
     }
 }

@@ -27,14 +27,14 @@ public class AuthService {
     }
 
     @Transactional
-    public Admin signInAdmin(String name) {
+    public Admin registerAdmin(String name) {
         var admin = Admin.builder().name(name).build();
         admin = adminRepository.save(admin);
         return admin;
     }
 
     @Transactional
-    public Owner signInOwner(String name) {
+    public Owner registerOwner(String name) {
         var owner = Owner.builder().name(name).build();
         owner = ownerRepository.save(owner);
         return owner;
