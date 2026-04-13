@@ -10,11 +10,12 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@Builder
+@ToString
 @NoArgsConstructor
 @Table(name = "tenant")
-@ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Tenant {
     @Id
     @EqualsAndHashCode.Include

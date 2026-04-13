@@ -7,12 +7,12 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
 @ToString
+@Table(name = "users")
 @NoArgsConstructor
+@Inheritance(strategy = InheritanceType.JOINED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class User {
     @Id
