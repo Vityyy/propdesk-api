@@ -13,10 +13,11 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@Builder
 @ToString
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "apartments", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "property_id"}))
 public class Apartment {
     @Id
