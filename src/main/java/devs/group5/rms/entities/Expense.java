@@ -7,15 +7,17 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
+@Builder
 @ToString
+@NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor_ = @Builder)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "expenses", uniqueConstraints = @UniqueConstraint(columnNames = {"description", "property_id"}))
 public class Expense {
     @Id
@@ -38,7 +40,7 @@ public class Expense {
 
     @NotNull
     @Column(nullable = false, name = "date")
-    private BigDecimal date;
+    private LocalDate date;
 
     @NotNull
     @Column(nullable = false, name = "payment_status")
