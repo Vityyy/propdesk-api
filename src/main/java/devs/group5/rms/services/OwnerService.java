@@ -22,9 +22,17 @@ public class OwnerService {
     private final PropertyRepository propertyRepository;
     private final ApartmentRepository apartmentRepository;
 
-    @PreAuthorize("hasRole('OWNER') and #data.ownerId().toString() == authentication.name")
-    public Property addProperty(@NonNull PropertyData data) {
+    @PreAuthorize("hasRole('OWNER')")
+    public Property addProperty(
+            @NonNull UUID authenticatedUserId,
+            @NonNull PropertyData data
+    ) {
         var owner = ownerRepository.findById(data.ownerId()).orElseThrow(() -> new RuntimeException(""));
+
+        if (!owner.getId().equals(authenticatedUserId)) {
+            throw new RuntimeException("Owner does not match authenticated user");
+        }
+
         var property = Property.builder()
                 .name(data.name())
                 .address(data.address())
