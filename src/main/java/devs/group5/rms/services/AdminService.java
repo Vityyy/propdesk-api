@@ -1,12 +1,45 @@
 package devs.group5.rms.services;
 
+import devs.group5.rms.data.ExpenseData;
+import devs.group5.rms.entities.Expense;
+import devs.group5.rms.entities.PaymentStatus;
 import devs.group5.rms.repositories.AdminRepository;
+import devs.group5.rms.repositories.ExpenseRepository;
+import devs.group5.rms.repositories.PropertyRepository;
 import lombok.AllArgsConstructor;
+import lombok.val;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Autowired)
 public class AdminService {
     private final AdminRepository adminRepository;
+    private final PropertyRepository propertyRepository;
+    private final ExpenseRepository expenseRepository;
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public Expense addExpense(@NonNull UUID authenticatedUserId, @NonNull ExpenseData data) {
+        val property = propertyRepository.findById(data.propertyId()).orElseThrow(() -> new RuntimeException("Property does not exist"));
+
+        if (!property.getOwner().getId().equals(authenticatedUserId)) {
+            throw new RuntimeException("Property does not belong to authenticated user");
+        }
+
+        val expense = Expense.builder()
+                .category(data.category())
+                .description(data.description())
+                .amount(data.amount())
+                .date(data.date())
+                .paymentStatus(PaymentStatus.PENDING)
+                .property(property)
+                .build();
+
+        return expenseRepository.save(expense);
+    }
 }
