@@ -1,4 +1,6 @@
 package devs.group5.rms.dtos;
 
-public record ApartmentRequest() {
+import java.util.UUID;
+
+public record ApartmentRequest(String name, UUID propertyId) {
 }
