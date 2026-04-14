@@ -16,7 +16,7 @@ import java.util.List;
 public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     @Override
     public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
-        Role role = jwt.getClaim("role");
+        Role role = Role.valueOf(jwt.getClaimAsString("role"));
         val authority = new SimpleGrantedAuthority(role.asAuthority());
         return new JwtAuthenticationToken(jwt, List.of(authority));
     }
