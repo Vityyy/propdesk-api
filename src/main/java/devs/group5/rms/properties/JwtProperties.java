@@ -7,6 +7,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "jwt")
 public record JwtProperties(
         Duration accessDuration,
+        Duration refreshDuration,
         String algorithm
 ) {
 }
