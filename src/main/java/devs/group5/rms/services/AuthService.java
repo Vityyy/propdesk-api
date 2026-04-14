@@ -23,7 +23,18 @@ public class AuthService {
     @Transactional
     public String login(String name) {
         val user = userRepository.findByName(name).orElseThrow(() -> new BadCredentialsException("User does not exist"));
-        return jwtService.generate(user.getId(), user.getRole());
+        return jwtService.generateAccessToken(user.getId(), user.getRole());
+    }
+
+    @Transactional
+    public String refresh(String refreshToken) {
+        val userId = jwtService.extractUserId(refreshToken);
+
+        val user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new RuntimeException("Could not find user with id %s".formatted(userId)));
+
+        return jwtService.generateAccessToken(user.getId(), user.getRole());
     }
 
     @Transactional
