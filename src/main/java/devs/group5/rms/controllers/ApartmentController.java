@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/apartment")
+@RequestMapping("/apartments")
 @AllArgsConstructor(onConstructor_ = @Autowired)
 public class ApartmentController {
     private final OwnerService ownerService;
