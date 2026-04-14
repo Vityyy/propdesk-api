@@ -16,4 +16,10 @@ public class UserService {
     public User getUserById(UUID id) {
         return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
     }
+
+    public User getUserByName(String name) {
+        return userRepository
+                .findByName(name)
+                .orElseThrow(() -> new RuntimeException("Could not find user with name %s".formatted(name)));
+    }
 }
