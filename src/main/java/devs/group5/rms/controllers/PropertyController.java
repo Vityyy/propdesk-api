@@ -29,7 +29,7 @@ public class PropertyController {
     ) {
         val property = new PropertyData(request.name(), request.address(), request.ownerId());
         val response = ownerService.addProperty(
-                UUID.fromString(jwt.getId()),
+                UUID.fromString(jwt.getSubject()),
                 property
         );
 

@@ -28,7 +28,7 @@ public class ExpenseController {
             @RequestBody ExpenseRequest request
     ) {
         val response = adminService.addExpense(
-                UUID.fromString(jwt.getId()),
+                UUID.fromString(jwt.getSubject()),
                 new ExpenseData(
                         request.category(),
                         request.description(),

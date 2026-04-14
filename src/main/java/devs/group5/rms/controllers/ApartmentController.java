@@ -28,7 +28,7 @@ public class ApartmentController {
             @RequestBody ApartmentRequest request
     ) {
         val apartment = ownerService.addApartment(
-                UUID.fromString(jwt.getId()),
+                UUID.fromString(jwt.getSubject()),
                 new ApartmentData(request.name(), request.propertyId())
         );
         return new ApartmentResponse(apartment.getId(), apartment.getName(), apartment.getProperty().getId());
