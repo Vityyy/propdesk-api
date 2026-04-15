@@ -24,7 +24,11 @@ public abstract class User {
     @Column(nullable = false, name = "name")
     private String name;
 
-    protected User(UUID id, String name) {
+    @NotBlank
+    @Column(nullable = false, name = "password")
+    private String password;
+
+    protected User(UUID id, String name, String password) {
         this.id = id;
         this.name = name;
     }

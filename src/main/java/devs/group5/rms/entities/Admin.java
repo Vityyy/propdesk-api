@@ -22,8 +22,8 @@ public class Admin extends User {
     private List<Owner> owners;
 
     @Builder
-    private Admin(UUID id, String name, List<Owner> owners) {
-        super(id, name);
+    private Admin(UUID id, String name, String password, List<Owner> owners) {
+        super(id, name, password);
         this.owners = owners;
     }
 
