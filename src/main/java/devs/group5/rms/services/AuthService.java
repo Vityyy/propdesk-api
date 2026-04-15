@@ -2,6 +2,7 @@ package devs.group5.rms.services;
 
 import devs.group5.rms.entities.Admin;
 import devs.group5.rms.entities.Owner;
+import devs.group5.rms.entities.User;
 import devs.group5.rms.repositories.AdminRepository;
 import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.UserRepository;
@@ -23,16 +24,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public String login(String name, String password) {
+    public User authenticate(String name, String password) {
         val user = userRepository
                 .findByName(name)
                 .orElseThrow(() -> new BadCredentialsException("Could not find user with name %s".formatted(name)));
 
         if (passwordEncoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("Invalid password for user with id %s".formatted(user.getId()));
+            throw new BadCredentialsException("Invalid password %s for user with id %s".formatted(name, password));
         }
 
-        return jwtService.generateAccessToken(user.getId(), user.getRole());
+        return user;
     }
 
     @Transactional
@@ -43,7 +44,7 @@ public class AuthService {
                 .findById(userId)
                 .orElseThrow(() -> new RuntimeException("Could not find user with id %s".formatted(userId)));
 
-        return jwtService.generateAccessToken(user.getId(), user.getRole());
+        return jwtService.generateAccessToken(user);
     }
 
     @Transactional
