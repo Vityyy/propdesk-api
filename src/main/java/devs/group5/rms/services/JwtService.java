@@ -1,6 +1,7 @@
 package devs.group5.rms.services;
 
 import devs.group5.rms.entities.Role;
+import devs.group5.rms.entities.User;
 import lombok.val;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,16 +35,12 @@ public class JwtService {
         this.refreshDuration = Duration.ofMillis(refreshDuration);
     }
 
-    private String generate(
-            @NonNull UUID userId,
-            @NonNull Role role,
-            @NonNull TemporalAmount duration
-    ) {
-        Instant now = Instant.now();
+    private String generate(User user, @NonNull TemporalAmount duration) {
+        val now = Instant.now();
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject(userId.toString())
-                .claim("role", role)
+        val claims = JwtClaimsSet.builder()
+                .subject(user.getId().toString())
+                .claim("role", user.getRole())
                 .issuedAt(now)
                 .expiresAt(now.plus(duration))
                 .build();
@@ -51,18 +48,12 @@ public class JwtService {
         return encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    public String generateAccessToken(
-            @NonNull UUID userId,
-            @NonNull Role role
-    ) {
-        return generate(userId, role, accessDuration);
+    public String generateAccessToken(User user) {
+        return generate(user, accessDuration);
     }
 
-    public String generateRefreshToken(
-            @NonNull UUID userId,
-            @NonNull Role role
-    ) {
-        return generate(userId, role, refreshDuration);
+    public String generateRefreshToken(User user) {
+        return generate(user, refreshDuration);
     }
 
     public UUID extractUserId(String token) {
