@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,10 +20,18 @@ public class AuthService {
     private final UserRepository userRepository;
     private final AdminRepository adminRepository;
     private final OwnerRepository ownerRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public String login(String name) {
-        val user = userRepository.findByName(name).orElseThrow(() -> new BadCredentialsException("User does not exist"));
+    public String login(String name, String password) {
+        val user = userRepository
+                .findByName(name)
+                .orElseThrow(() -> new BadCredentialsException("Could not find user with name %s".formatted(name)));
+
+        if (passwordEncoder.matches(password, user.getPassword())) {
+            throw new BadCredentialsException("Invalid password for user with id %s".formatted(user.getId()));
+        }
+
         return jwtService.generateAccessToken(user.getId(), user.getRole());
     }
 
@@ -38,16 +47,28 @@ public class AuthService {
     }
 
     @Transactional
-    public Admin registerAdmin(String name) {
-        var admin = Admin.builder().name(name).build();
-        admin = adminRepository.save(admin);
-        return admin;
+    public Admin registerAdmin(String name, String password) {
+        val hashedPassword = passwordEncoder.encode(password);
+
+        val admin = Admin
+                .builder()
+                .name(name)
+                .password(hashedPassword)
+                .build();
+
+        return adminRepository.save(admin);
     }
 
     @Transactional
-    public Owner registerOwner(String name) {
-        var owner = Owner.builder().name(name).build();
-        owner = ownerRepository.save(owner);
-        return owner;
+    public Owner registerOwner(String name, String password) {
+        val hashedPassword = passwordEncoder.encode(password);
+
+        val owner = Owner
+                .builder()
+                .name(name)
+                .password(hashedPassword)
+                .build();
+
+        return ownerRepository.save(owner);
     }
 }
