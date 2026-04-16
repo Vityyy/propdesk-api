@@ -18,12 +18,12 @@ import java.util.UUID;
 public class Owner extends User {
     @ToString.Exclude
     @JoinColumn(name = "admin_id")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     private Admin admin;
 
     @NotNull
     @Positive
-    @Column(name = "admin_cut", nullable = false)
+    @Column(name = "admin_cut")
     private BigDecimal adminCut;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
