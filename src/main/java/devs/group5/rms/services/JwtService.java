@@ -18,6 +18,10 @@ import java.util.UUID;
 
 @Service
 public class JwtService {
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+    private static final String ACCESS_TOKEN_TYPE = "access";
+    private static final String REFRESH_TOKEN_TYPE = "refresh";
+
     private final JwtDecoder decoder;
     private final JwtEncoder encoder;
     private final TemporalAmount accessDuration;
@@ -35,12 +39,13 @@ public class JwtService {
         this.refreshDuration = Duration.ofMillis(refreshDuration);
     }
 
-    private String generate(User user, @NonNull TemporalAmount duration) {
+    private String generate(User user, @NonNull TemporalAmount duration, String tokenType) {
         val now = Instant.now();
 
         val claims = JwtClaimsSet.builder()
                 .subject(user.getId().toString())
-                .claim("role", user.getRole())
+                .claim("role", user.getRole().name())
+                .claim(TOKEN_TYPE_CLAIM, tokenType)
                 .issuedAt(now)
                 .expiresAt(now.plus(duration))
                 .build();
@@ -49,11 +54,11 @@ public class JwtService {
     }
 
     public String generateAccessToken(User user) {
-        return generate(user, accessDuration);
+        return generate(user, accessDuration, ACCESS_TOKEN_TYPE);
     }
 
     public String generateRefreshToken(User user) {
-        return generate(user, refreshDuration);
+        return generate(user, refreshDuration, REFRESH_TOKEN_TYPE);
     }
 
     public UUID extractUserId(String token) {
@@ -64,6 +69,12 @@ public class JwtService {
 
     public Role extractUserRole(String token) {
         val jwt = decoder.decode(token);
-        return jwt.getClaim("role");
+        return Role.valueOf(jwt.getClaimAsString("role"));
+    }
+
+    public boolean isRefreshToken(String token) {
+        val jwt = decoder.decode(token);
+        val tokenType = jwt.getClaimAsString(TOKEN_TYPE_CLAIM);
+        return REFRESH_TOKEN_TYPE.equals(tokenType);
     }
 }

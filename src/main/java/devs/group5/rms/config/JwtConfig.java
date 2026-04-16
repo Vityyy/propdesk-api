@@ -18,20 +18,25 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableConfigurationProperties(JwtProperties.class)
 public class JwtConfig {
     private final String secret;
+    private final String algorithm;
 
-    public JwtConfig(@Value("${jwt.secret}") String secret) {
+    public JwtConfig(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.algorithm}") String algorithm
+    ) {
         this.secret = secret;
+        this.algorithm = algorithm;
     }
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        SecretKey secretKey = new SecretKeySpec(secret.getBytes(), "${jwt.algorithm}");
+        SecretKey secretKey = new SecretKeySpec(secret.getBytes(), algorithm);
         return NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        SecretKey key = new SecretKeySpec(secret.getBytes(), "${jwt.algorithm}");
+        SecretKey key = new SecretKeySpec(secret.getBytes(), algorithm);
         return new NimbusJwtEncoder(new ImmutableSecret<>(key));
     }
 }
