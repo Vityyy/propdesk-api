@@ -10,20 +10,23 @@ import java.time.Duration;
 public class CookieService {
     private final boolean secureCookies;
     private final Duration refreshCookieMaxAge;
+    private final String refreshCookiePath;
 
     public CookieService(
             @Value("${ENVIRONMENT:production}") String environment,
-            @Value("${jwt.refreshDuration}") long refreshDurationMillis
+            @Value("${jwt.refreshDuration}") long refreshDurationMillis,
+            @Value("${server.servlet.context-path:}") String contextPath
     ) {
         this.secureCookies = !"development".equalsIgnoreCase(environment);
         this.refreshCookieMaxAge = Duration.ofMillis(refreshDurationMillis);
+        this.refreshCookiePath = buildRefreshCookiePath(contextPath);
     }
 
     public ResponseCookie createRefreshTokenCookie(String token) {
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
                 .secure(secureCookies)
-                .path("/auth/refresh")
+                .path(refreshCookiePath)
                 .maxAge(refreshCookieMaxAge)
                 .build();
     }
@@ -32,8 +35,21 @@ public class CookieService {
         return ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(secureCookies)
-                .path("/auth/refresh")
+                .path(refreshCookiePath)
                 .maxAge(0)
                 .build();
+    }
+
+    private String buildRefreshCookiePath(String contextPath) {
+        if (contextPath == null || contextPath.isBlank() || "/".equals(contextPath)) {
+            return "/auth/refresh";
+        }
+
+        var normalized = contextPath.startsWith("/") ? contextPath : "/" + contextPath;
+        if (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        return normalized + "/auth/refresh";
     }
 }
