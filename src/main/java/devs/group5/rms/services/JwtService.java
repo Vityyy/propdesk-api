@@ -5,6 +5,7 @@ import devs.group5.rms.entities.User;
 import lombok.val;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
@@ -23,17 +24,20 @@ public class JwtService {
     private final JwtEncoder encoder;
     private final TemporalAmount accessDuration;
     private final TemporalAmount refreshDuration;
+    private final MacAlgorithm macAlgorithm;
 
     public JwtService(
             JwtDecoder decoder,
             JwtEncoder encoder,
             @Value("${jwt.accessDuration}") int accessDuration,
-            @Value("${jwt.refreshDuration}") int refreshDuration
+            @Value("${jwt.refreshDuration}") int refreshDuration,
+            @Value("${jwt.algorithm}") String algorithm
     ) {
         this.decoder = decoder;
         this.encoder = encoder;
         this.accessDuration = Duration.ofMillis(accessDuration);
         this.refreshDuration = Duration.ofMillis(refreshDuration);
+        this.macAlgorithm = resolveMacAlgorithm(algorithm);
     }
 
     private String generate(User user, @NonNull TemporalAmount duration, String tokenType) {
@@ -47,7 +51,18 @@ public class JwtService {
                 .expiresAt(now.plus(duration))
                 .build();
 
-        return encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        val jwsHeader = JwsHeader.with(macAlgorithm).build();
+        return encoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+    }
+
+    private MacAlgorithm resolveMacAlgorithm(String algorithm) {
+        String normalized = algorithm == null ? "" : algorithm.trim();
+        return switch (normalized) {
+            case "HmacSHA256", "HS256" -> MacAlgorithm.HS256;
+            case "HmacSHA384", "HS384" -> MacAlgorithm.HS384;
+            case "HmacSHA512", "HS512" -> MacAlgorithm.HS512;
+            default -> throw new IllegalArgumentException("Unsupported jwt.algorithm value: " + algorithm);
+        };
     }
 
     public String generateAccessToken(User user) {
