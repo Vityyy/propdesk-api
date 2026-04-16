@@ -5,7 +5,6 @@ import devs.group5.rms.entities.User;
 import lombok.val;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
@@ -24,20 +23,17 @@ public class JwtService {
     private final JwtEncoder encoder;
     private final TemporalAmount accessDuration;
     private final TemporalAmount refreshDuration;
-    private final String algorithm;
 
     public JwtService(
             JwtDecoder decoder,
             JwtEncoder encoder,
             @Value("${jwt.accessDuration}") int accessDuration,
-            @Value("${jwt.refreshDuration}") int refreshDuration,
-            @Value("${jwt.algorithm}") String algorithm
+            @Value("${jwt.refreshDuration}") int refreshDuration
     ) {
         this.decoder = decoder;
         this.encoder = encoder;
         this.accessDuration = Duration.ofMillis(accessDuration);
         this.refreshDuration = Duration.ofMillis(refreshDuration);
-        this.algorithm = algorithm;
     }
 
     private String generate(User user, @NonNull TemporalAmount duration, String tokenType) {
@@ -51,8 +47,7 @@ public class JwtService {
                 .expiresAt(now.plus(duration))
                 .build();
 
-        val jwsHeader = JwsHeader.with(MacAlgorithm.from(algorithm)).build();
-        return encoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+        return encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
     public String generateAccessToken(User user) {
