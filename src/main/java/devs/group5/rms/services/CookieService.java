@@ -11,6 +11,7 @@ public class CookieService {
     private final boolean secureCookies;
     private final Duration refreshCookieMaxAge;
     private final String refreshCookiePath;
+    private final String refreshCookieSameSite;
 
     public CookieService(
             @Value("${ENVIRONMENT:production}") String environment,
@@ -20,12 +21,14 @@ public class CookieService {
         this.secureCookies = !"development".equalsIgnoreCase(environment);
         this.refreshCookieMaxAge = Duration.ofMillis(refreshDurationMillis);
         this.refreshCookiePath = buildRefreshCookiePath(contextPath);
+        this.refreshCookieSameSite = this.secureCookies ? "None" : "Lax";
     }
 
     public ResponseCookie createRefreshTokenCookie(String token) {
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
                 .secure(secureCookies)
+                .sameSite(refreshCookieSameSite)
                 .path(refreshCookiePath)
                 .maxAge(refreshCookieMaxAge)
                 .build();
@@ -35,6 +38,7 @@ public class CookieService {
         return ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(secureCookies)
+                .sameSite(refreshCookieSameSite)
                 .path(refreshCookiePath)
                 .maxAge(0)
                 .build();
