@@ -32,10 +32,17 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testCompileOnly("org.projectlombok:lombok")
+    testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testAnnotationProcessor("org.projectlombok:lombok")
+
+    // Cucumber
+    testImplementation("io.cucumber:cucumber-java:7.15.0")
+    testImplementation("io.cucumber:cucumber-spring:7.15.0")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.15.0")
+    testImplementation("org.junit.platform:junit-platform-suite:1.10.2")
 }
 
 tasks.withType<Test> {
