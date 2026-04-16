@@ -11,8 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/auth")
@@ -39,10 +42,18 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public TokenResponse refresh(
-            @CookieValue(name = "refreshToken") String refreshToken
+            @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
-        val accessToken = authService.refresh(refreshToken);
-        return new TokenResponse(accessToken);
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token cookie is missing");
+        }
+
+        try {
+            val accessToken = authService.refresh(refreshToken);
+            return new TokenResponse(accessToken);
+        } catch (BadCredentialsException exception) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, exception.getMessage(), exception);
+        }
     }
 
     @PostMapping("/logout")
