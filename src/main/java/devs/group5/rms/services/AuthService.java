@@ -29,7 +29,7 @@ public class AuthService {
                 .findByName(name)
                 .orElseThrow(() -> new BadCredentialsException("Could not find user with name %s".formatted(name)));
 
-        if (passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("Invalid password %s for user with id %s".formatted(name, password));
         }
 
@@ -38,6 +38,10 @@ public class AuthService {
 
     @Transactional
     public String refresh(String refreshToken) {
+        if (!jwtService.isRefreshToken(refreshToken)) {
+            throw new BadCredentialsException("Invalid token type for refresh flow");
+        }
+
         val userId = jwtService.extractUserId(refreshToken);
 
         val user = userRepository
