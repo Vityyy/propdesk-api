@@ -8,7 +8,7 @@ COPY build.gradle.kts settings.gradle.kts ./
 RUN chmod +x ./gradlew
 
 COPY src ./src
-RUN ./gradlew clean bootJar --no-daemon -x test
+RUN ./gradlew bootJar --no-daemon -x test
 
 FROM eclipse-temurin:25-jre-alpine
 
