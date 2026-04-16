@@ -1,27 +1,37 @@
 package devs.group5.rms.services;
 
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Service
-@AllArgsConstructor(onConstructor_ = @Autowired)
 public class CookieService {
+    private final boolean secureCookies;
+    private final Duration refreshCookieMaxAge;
+
+    public CookieService(
+            @Value("${ENVIRONMENT:production}") String environment,
+            @Value("${jwt.refreshDuration}") long refreshDurationMillis
+    ) {
+        this.secureCookies = !"development".equalsIgnoreCase(environment);
+        this.refreshCookieMaxAge = Duration.ofMillis(refreshDurationMillis);
+    }
+
     public ResponseCookie createRefreshTokenCookie(String token) {
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
-                .secure(true)
+                .secure(secureCookies)
                 .path("/auth/refresh")
-                .maxAge(60 * 60 * 24 * 7)
-                .sameSite("Strict")
+                .maxAge(refreshCookieMaxAge)
                 .build();
     }
 
     public ResponseCookie deleteRefreshTokenCookie() {
         return ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(secureCookies)
                 .path("/auth/refresh")
                 .maxAge(0)
                 .build();
