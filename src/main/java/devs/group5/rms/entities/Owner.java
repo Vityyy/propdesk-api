@@ -1,7 +1,6 @@
 package devs.group5.rms.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
@@ -18,10 +17,9 @@ import java.util.UUID;
 public class Owner extends User {
     @ToString.Exclude
     @JoinColumn(name = "admin_id")
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Admin admin;
 
-    @NotNull
     @Positive
     @Column(name = "admin_cut")
     private BigDecimal adminCut;
