@@ -31,6 +31,7 @@ public abstract class User {
     protected User(UUID id, String name, String password) {
         this.id = id;
         this.name = name;
+        this.password = password;
     }
 
     abstract public Role getRole();
