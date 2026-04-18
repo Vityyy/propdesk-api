@@ -7,7 +7,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class TpGestionApplicationTests {
+public class TpGestionApplicationTests {
 
     @Test
     void contextLoads() {
