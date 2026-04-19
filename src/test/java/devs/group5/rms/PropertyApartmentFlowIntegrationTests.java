@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.net.URI;
@@ -23,6 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@TestPropertySource(properties = {
+        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+})
 class PropertyApartmentFlowIntegrationTests {
     @Autowired
     private ApartmentRepository apartmentRepository;
@@ -118,20 +123,31 @@ class PropertyApartmentFlowIntegrationTests {
                 });
 
         // 5. Create an apartment associated with the property created in the previous step.
+        // ApartmentController expects a LIST of ApartmentRequest in the request body and returns a list of ApartmentResponse.
+        var apartmentRequestBody = """
+                [
+                  {
+                    "name": "A",
+                    "propertyId": "%s",
+                    "amount_due": 1
+                  }
+                ]
+                """.formatted(propertyId);
+
         var apartmentResponse = postJson(
                 "/apartments",
-                """
-                        {
-                          "name": "A",
-                          "propertyId": "%s"
-                        }
-                        """.formatted(propertyId),
+                apartmentRequestBody,
                 accessToken
         );
 
         assertThat(apartmentResponse.statusCode()).isEqualTo(200);
 
-        JsonNode apartmentJson = objectMapper.readTree(apartmentResponse.body());
+        JsonNode apartmentArray = objectMapper.readTree(apartmentResponse.body());
+        // Ensure we got an array with at least one element and inspect the first element
+        assertThat(apartmentArray.isArray()).isTrue();
+        assertThat(apartmentArray.size()).isGreaterThan(0);
+
+        JsonNode apartmentJson = apartmentArray.get(0);
         assertThat(apartmentJson.get("name").asText()).isEqualTo("A");
         assertThat(apartmentJson.get("propertyId").asText()).isEqualTo(propertyId.toString());
         var apartmentId = UUID.fromString(apartmentJson.get("id").asText());

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/apartments")
@@ -23,14 +25,22 @@ public class ApartmentController {
     private final OwnerService ownerService;
 
     @PostMapping
-    public ApartmentResponse addApartment(
+    public List<ApartmentResponse> addApartment(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestBody ApartmentRequest request
+            @RequestBody List<ApartmentRequest> requests
     ) {
-        val apartment = ownerService.addApartment(
-                UUID.fromString(jwt.getSubject()),
-                new ApartmentData(request.name(), request.propertyId())
-        );
-        return new ApartmentResponse(apartment.getId(), apartment.getName(), apartment.getProperty().getId());
+        var ownerId = UUID.fromString(jwt.getSubject());
+
+        return requests.stream()
+                .map(r -> {
+                    val apartment = ownerService.addApartment(
+                            ownerId,
+                            new ApartmentData(r.name(), r.propertyId(), r.amount_due())
+                    );
+                    return new ApartmentResponse(apartment.getId(), apartment.getName(), apartment.getProperty().getId());
+                })
+                .collect(Collectors.toList());
     }
 }
+
+
