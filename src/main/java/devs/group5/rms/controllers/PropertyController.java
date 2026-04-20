@@ -9,12 +9,15 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/properties")
@@ -40,5 +43,19 @@ public class PropertyController {
                 response.getAddress(),
                 response.getOwner().getId()
         );
+    }
+
+    @GetMapping
+    public List<PropertyResponse> getProperties(@AuthenticationPrincipal Jwt jwt) {
+        val ownerId = UUID.fromString(jwt.getSubject());
+        return ownerService.getProperties(ownerId)
+                .stream()
+                .map(r -> new PropertyResponse(
+                        r.getId(),
+                        r.getName(),
+                        r.getAddress(),
+                        r.getOwner().getId()
+                ))
+                .collect(Collectors.toList());
     }
 }
