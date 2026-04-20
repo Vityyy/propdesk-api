@@ -60,6 +60,7 @@ public class OwnerService {
         var apartment = Apartment.builder()
                 .name(data.name())
                 .property(property)
+                .amountDue(data.amount_due())
                 .build();
 
         apartmentRepository.save(apartment);
