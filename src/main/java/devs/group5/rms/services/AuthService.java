@@ -6,6 +6,7 @@ import devs.group5.rms.entities.User;
 import devs.group5.rms.repositories.AdminRepository;
 import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.UserRepository;
+import jakarta.persistence.EntityExistsException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.val;
@@ -51,10 +52,26 @@ public class AuthService {
         return jwtService.generateAccessToken(user);
     }
 
+    private void validateRegister(String name, String password) {
+        if (password.isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be blank");
+        }
+
+        if (adminRepository.existsByName(name)) {
+            throw new EntityExistsException();
+        }
+    }
+
+    private String hashPassword(String password) {
+        return passwordEncoder.encode(password);
+    }
+
     @Transactional
     public Admin registerAdmin(String name, String password) {
-        val hashedPassword = passwordEncoder.encode(password);
+        validateRegister(name, password);
 
+
+        val hashedPassword = hashPassword(password);
         val admin = Admin
                 .builder()
                 .name(name)
@@ -66,8 +83,10 @@ public class AuthService {
 
     @Transactional
     public Owner registerOwner(String name, String password) {
-        val hashedPassword = passwordEncoder.encode(password);
+        validateRegister(name, password);
 
+
+        val hashedPassword = hashPassword(password);
         val owner = Owner
                 .builder()
                 .name(name)

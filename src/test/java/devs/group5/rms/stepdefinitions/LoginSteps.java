@@ -2,43 +2,41 @@ package devs.group5.rms.stepdefinitions;
 
 import devs.group5.rms.controllers.AuthController;
 import devs.group5.rms.dtos.LoginRequest;
+import devs.group5.rms.dtos.SignUpRequest;
 import devs.group5.rms.dtos.TokenResponse;
+import devs.group5.rms.entities.User;
 import devs.group5.rms.repositories.UserRepository;
-import devs.group5.rms.services.AuthService;
+import devs.group5.rms.services.JwtService;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.spring.CucumberContextConfiguration;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
-
-import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@CucumberContextConfiguration
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@ActiveProfiles("test")
 public class LoginSteps {
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private AuthController authController;
 
     @Autowired
-    private AuthService authService;
-
-    @Autowired
     private UserRepository userRepository;
 
+    private User user;
     private ResponseEntity<TokenResponse> response;
     private Exception caughtException;
 
     @Given("que existe un usuario con nombre {string} y contraseña {string}")
     public void que_existe_un_usuario_con_nombre_y_contrasena(String username, String password) {
-        if (userRepository.findByName(username).isEmpty()) {
-            authService.registerAdmin(username, password);
+        if (!userRepository.existsByName(username)) {
+            val user = authController.registerAdmin(new SignUpRequest(username, password));
+            this.user = userRepository.findById(user.id()).orElseThrow();
         }
     }
 
@@ -56,7 +54,16 @@ public class LoginSteps {
         assertNull(caughtException, "No debería haber lanzado una excepción");
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody().access());
+
+        val body = response.getBody();
+        assertNotNull(body);
+
+        val token = body.access();
+        val userId = jwtService.extractUserId(token);
+        assertEquals(user.getId(), userId);
+
+        val role = jwtService.extractUserRole(token);
+        assertEquals(user.getRole(), role);
     }
 
     @Then("obtengo un error de credenciales inválidas")
