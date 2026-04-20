@@ -61,6 +61,18 @@ public class OwnerService {
     }
 
     @PreAuthorize("hasRole('OWNER')")
+    public void deleteProperty(@NonNull UUID authenticatedUserId, @NonNull UUID propertyId) {
+        var property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getOwner().getId().equals(authenticatedUserId)) {
+            throw new RuntimeException("Property does not belong to authenticated user");
+        }
+
+        propertyRepository.delete(property);
+    }
+
+    @PreAuthorize("hasRole('OWNER')")
     public Apartment addApartment(UUID authenticatedUserId, @NonNull ApartmentData data) {
         var property = propertyRepository.findById(data.propertyId()).orElseThrow(() -> new RuntimeException(""));
 
