@@ -9,6 +9,7 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +40,15 @@ public class ApartmentController {
                     );
                     return new ApartmentResponse(apartment.getId(), apartment.getName(), apartment.getProperty().getId());
                 })
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping
+    public List<ApartmentResponse> getApartments(@AuthenticationPrincipal Jwt jwt) {
+        val ownerId = UUID.fromString(jwt.getSubject());
+        return ownerService.getApartments(ownerId)
+                .stream()
+                .map(r -> new ApartmentResponse(r.getId(), r.getName(), r.getProperty().getId()))
                 .collect(Collectors.toList());
     }
 }
