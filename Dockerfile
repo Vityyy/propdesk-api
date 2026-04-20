@@ -20,4 +20,5 @@ USER spring
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/home/spring/deploy.jar"]
+ENTRYPOINT ["java", "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-XX:MaxRAMPercentage=75", "-Xss512k", "-jar", "/home/spring/deploy.jar"]
+
