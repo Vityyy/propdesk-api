@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 import java.math.BigDecimal;
 
@@ -27,6 +28,16 @@ public class OwnerService {
     private final AdminRepository adminRepository;
     private final PropertyRepository propertyRepository;
     private final ApartmentRepository apartmentRepository;
+
+    @PreAuthorize("hasRole('OWNER')")
+    public List<Property> getProperties(@NonNull UUID ownerId) {
+        return propertyRepository.findByOwner_Id(ownerId);
+    }
+
+    @PreAuthorize("hasRole('OWNER')")
+    public List<Apartment> getApartments(@NonNull UUID ownerId) {
+        return apartmentRepository.findByProperty_Owner_Id(ownerId);
+    }
 
     @PreAuthorize("hasRole('OWNER')")
     public Property addProperty(
@@ -47,6 +58,18 @@ public class OwnerService {
 
         propertyRepository.save(property);
         return property;
+    }
+
+    @PreAuthorize("hasRole('OWNER')")
+    public void deleteProperty(@NonNull UUID authenticatedUserId, @NonNull UUID propertyId) {
+        var property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getOwner().getId().equals(authenticatedUserId)) {
+            throw new RuntimeException("Property does not belong to authenticated user");
+        }
+
+        propertyRepository.delete(property);
     }
 
     @PreAuthorize("hasRole('OWNER')")
