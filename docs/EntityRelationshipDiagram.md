@@ -36,12 +36,14 @@ erDiagram
 
     APARTMENTS {
         id UUID PK
-        name Text UK
-        property_id UUID UK, FK
-        tenant_id UUID FK
+        number Integer UK
         due_date Date
-        amount_due Decimal
         payment_status Enumeration
+        square_meters Decimal
+        floor Integer
+        rent Decimal
+        tenant_id UUID FK
+        property_id UUID UK, FK
     }
 
     TENANTS {
