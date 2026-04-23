@@ -38,4 +38,6 @@ public class Property {
     private List<Apartment> apartments;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Expense> expenses;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ApartmentGroup> apartmentGroups;
 }
