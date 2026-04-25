@@ -34,7 +34,6 @@ public class OwnerService {
         return propertyRepository.findByOwner_Id(ownerId);
     }
 
-    @PreAuthorize("hasRole('OWNER')")
     public List<Apartment> getApartments(@NonNull UUID ownerId) {
         return apartmentRepository.findByProperty_Owner_Id(ownerId);
     }
