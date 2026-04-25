@@ -2,11 +2,13 @@ package devs.group5.rms.services;
 
 import devs.group5.rms.data.ExpenseData;
 import devs.group5.rms.entities.Admin;
+import devs.group5.rms.entities.Apartment;
 import devs.group5.rms.entities.Expense;
 import devs.group5.rms.entities.Owner;
 import devs.group5.rms.entities.PaymentStatus;
 import devs.group5.rms.entities.Property;
 import devs.group5.rms.repositories.AdminRepository;
+import devs.group5.rms.repositories.ApartmentRepository;
 import devs.group5.rms.repositories.ExpenseRepository;
 import devs.group5.rms.repositories.PropertyRepository;
 import devs.group5.rms.repositories.OwnerRepository;
@@ -26,6 +28,7 @@ import java.util.List;
 public class AdminService {
     private final AdminRepository adminRepository;
     private final PropertyRepository propertyRepository;
+    private final ApartmentRepository apartmentRepository;
     private final ExpenseRepository expenseRepository;
     private final OwnerRepository ownerRepository;
 
@@ -36,6 +39,7 @@ public class AdminService {
 
     // Returns all owners linked to the authenticated admin
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public List<Owner> getAdminOwners(@NonNull UUID authenticatedAdminId) {
         val admin = adminRepository.findById(authenticatedAdminId)
                 .orElseThrow(() -> new RuntimeException("Admin does not exist"));
@@ -45,6 +49,7 @@ public class AdminService {
 
     // Returns properties for a specific owner, validating that the admin manages this owner
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public List<Property> getOwnerProperties(@NonNull UUID authenticatedAdminId, @NonNull UUID ownerId) {
         val admin = adminRepository.findById(authenticatedAdminId)
                 .orElseThrow(() -> new RuntimeException("Admin does not exist"));
@@ -58,6 +63,24 @@ public class AdminService {
         }
 
         return propertyRepository.findByOwner_Id(ownerId);
+    }
+
+    // Returns apartments for a specific owner, validating that the admin manages this owner
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public List<Apartment> getOwnerApartments(@NonNull UUID authenticatedAdminId, @NonNull UUID ownerId) {
+        val admin = adminRepository.findById(authenticatedAdminId)
+                .orElseThrow(() -> new RuntimeException("Admin does not exist"));
+
+        // Validate that this admin manages the requested owner
+        boolean hasOwner = admin.getOwners().stream()
+                .anyMatch(owner -> owner.getId().equals(ownerId));
+        
+        if (!hasOwner) {
+            throw new RuntimeException("Admin does not manage this owner");
+        }
+
+        return apartmentRepository.findByProperty_Owner_Id(ownerId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
