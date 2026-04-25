@@ -61,7 +61,7 @@ public class Apartment {
 
     @NotNull
     @Positive
-    @Column(name = "square_meters", nullable = false)
+    @Column(name = "floor", nullable = false)
     private int floor;
 
     @NotNull
