@@ -21,7 +21,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ApartmentSteps {
 
@@ -57,8 +60,8 @@ public class ApartmentSteps {
                 .orElseGet(() -> propertyRepository.save(Property.builder().name(propName).address(address).owner(owner).build()));
     }
 
-    @When("agrego un apartamento con nombre {string} y monto {int} para la propiedad {string} y propietario {string}")
-    public void agrego_un_apartamento(String aptName, Integer amount, String propName, String ownerName) {
+    @When("agrego un apartamento con número {int} y monto {int} para la propiedad {string} y propietario {string}")
+    public void agrego_un_apartamento(int apartmentNumber, Integer amount, String propName, String ownerName) {
         try {
             var owner = ownerRepository.findAll().stream().filter(o -> o.getName().equals(ownerName)).findFirst().orElseThrow();
             var property = propertyRepository.findAll().stream().filter(p -> p.getName().equals(propName) && p.getOwner().getId().equals(owner.getId())).findFirst().orElseThrow();
@@ -73,7 +76,7 @@ public class ApartmentSteps {
             var authToken = new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("ROLE_OWNER")));
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            ApartmentRequest req = new ApartmentRequest(aptName, property.getId(), new BigDecimal(amount));
+            ApartmentRequest req = new ApartmentRequest(apartmentNumber, property.getId(), new BigDecimal(amount));
             response = apartmentController.addApartment(jwt, List.of(req));
             // clear context to avoid leaking auth between scenarios
             SecurityContextHolder.clearContext();
@@ -83,10 +86,10 @@ public class ApartmentSteps {
         }
     }
 
-    @When("intento agregar un apartamento con nombre {string} y monto {int} para la propiedad {string} y propietario {string}")
-    public void intento_agregar_un_apartamento(String aptName, Integer amount, String propName, String ownerName) {
+    @When("intento agregar un apartamento con número {int} y monto {int} para la propiedad {string} y propietario {string}")
+    public void intento_agregar_un_apartamento(int apartmentNumber, Integer amount, String propName, String ownerName) {
         // reuse same implementation
-        agrego_un_apartamento(aptName, amount, propName, ownerName);
+        agrego_un_apartamento(apartmentNumber, amount, propName, ownerName);
     }
 
     @Then("obtengo una respuesta con {int} apartamento creado")
@@ -96,12 +99,12 @@ public class ApartmentSteps {
         assertEquals(expectedCount, response.size());
     }
 
-    @Then("el apartamento tiene nombre {string}")
-    public void el_apartamento_tiene_nombre(String expectedName) {
+    @Then("el apartamento tiene número {int}")
+    public void el_apartamento_tiene_nombre(int apartmentNumber) {
         assertNull(caughtException);
         assertNotNull(response);
         assertFalse(response.isEmpty());
-        assertEquals(expectedName, response.get(0).name());
+        assertEquals(apartmentNumber, response.getFirst().number());
     }
 
     @Then("obtengo un error indicando que la propiedad no pertenece al propietario")
