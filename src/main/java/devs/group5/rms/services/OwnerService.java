@@ -82,9 +82,9 @@ public class OwnerService {
         }
 
         var apartment = Apartment.builder()
-                .name(data.name())
+                .number(data.number())
                 .property(property)
-                .amountDue(data.amount_due())
+                .rent(data.rent())
                 .build();
 
         apartmentRepository.save(apartment);
