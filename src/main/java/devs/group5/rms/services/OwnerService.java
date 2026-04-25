@@ -106,7 +106,7 @@ public class OwnerService {
                 .stream()
                 .map(apartment -> new PropertyApartmentsResponse(
                         apartment.getId(),
-                        apartment.getAmountDue(),
+                        apartment.getRent(),
                         apartment.getPaymentStatus(),
                         apartment.getTenant() != null ? apartment.getTenant().getId() : null,
                         apartment.getTenant() != null ? apartment.getTenant().getName() : null,
