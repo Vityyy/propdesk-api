@@ -56,8 +56,8 @@ public class PropertyController {
             @RequestParam(value = "ownerId", required = false) String ownerIdParam
     ) {
         val userId = UUID.fromString(jwt.getSubject());
-        val roles = jwt.getClaimAsStringList("roles");
-        val isAdmin = roles != null && roles.contains("ROLE_ADMIN");
+        val role = jwt.getClaimAsString("role");
+        val isAdmin = "ADMIN".equals(role);
 
         List<PropertyResponse> properties;
 
