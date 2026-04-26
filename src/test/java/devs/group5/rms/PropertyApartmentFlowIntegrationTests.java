@@ -29,20 +29,16 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
 })
 class PropertyApartmentFlowIntegrationTests {
-    @Autowired
-    private ApartmentRepository apartmentRepository;
-
-    @Autowired
-    private PropertyRepository propertyRepository;
-
-    @Autowired
-    private OwnerRepository ownerRepository;
-
-    @LocalServerPort
-    private int port;
-
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ApartmentRepository apartmentRepository;
+    @Autowired
+    private PropertyRepository propertyRepository;
+    @Autowired
+    private OwnerRepository ownerRepository;
+    @LocalServerPort
+    private int port;
 
     @BeforeEach
     void cleanDatabase() {
@@ -127,7 +123,7 @@ class PropertyApartmentFlowIntegrationTests {
         var apartmentRequestBody = """
                 [
                   {
-                    "name": "A",
+                    "number": 1,
                     "propertyId": "%s",
                     "amount_due": 1
                   }
@@ -148,7 +144,7 @@ class PropertyApartmentFlowIntegrationTests {
         assertThat(apartmentArray.size()).isGreaterThan(0);
 
         JsonNode apartmentJson = apartmentArray.get(0);
-        assertThat(apartmentJson.get("name").asText()).isEqualTo("A");
+        assertThat(apartmentJson.get("number").asInt()).isEqualTo(1);
         assertThat(apartmentJson.get("propertyId").asText()).isEqualTo(propertyId.toString());
         var apartmentId = UUID.fromString(apartmentJson.get("id").asText());
 
@@ -156,7 +152,7 @@ class PropertyApartmentFlowIntegrationTests {
         assertThat(apartmentRepository.findById(apartmentId))
                 .get()
                 .satisfies(apartment -> {
-                    assertThat(apartment.getName()).isEqualTo("A");
+                    assertThat(apartment.getNumber()).isEqualTo(1);
                     assertThat(apartment.getProperty().getId()).isEqualTo(propertyId);
                 });
     }

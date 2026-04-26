@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface ApartmentRepository extends JpaRepository<Apartment, UUID> {
     List<Apartment> findByProperty_Owner_Id(UUID ownerId);
+
+    List<Apartment> findByProperty_Id(UUID propertyId);
 }

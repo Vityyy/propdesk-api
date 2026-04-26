@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,9 +36,9 @@ public class ApartmentController {
                 .map(r -> {
                     val apartment = ownerService.addApartment(
                             ownerId,
-                            new ApartmentData(r.name(), r.propertyId(), r.amount_due())
+                            new ApartmentData(r.number(), r.propertyId(), r.amount_due())
                     );
-                    return new ApartmentResponse(apartment.getId(), apartment.getName(), apartment.getProperty().getId());
+                    return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
                 })
                 .collect(Collectors.toList());
     }
@@ -48,9 +48,7 @@ public class ApartmentController {
         val ownerId = UUID.fromString(jwt.getSubject());
         return ownerService.getApartments(ownerId)
                 .stream()
-                .map(r -> new ApartmentResponse(r.getId(), r.getName(), r.getProperty().getId()))
+                .map(r -> new ApartmentResponse(r.getId(), r.getNumber(), r.getProperty().getId()))
                 .collect(Collectors.toList());
     }
 }
-
-
