@@ -74,7 +74,7 @@ public class PropertyService {
                     .orElseThrow(() -> new IllegalArgumentException("Admin %s does not work with owner %s".formatted(authenticatedUserId, ownerId)));
 
             case OWNER -> {
-                if (authenticatedUserId != ownerId) {
+                if (!authenticatedUserId.equals(ownerId)) {
                     throw new IllegalArgumentException("Owners cannot add properties to other owners");
                 }
 
