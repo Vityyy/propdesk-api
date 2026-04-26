@@ -41,8 +41,8 @@ public class PropertyController {
             @RequestBody PropertyRequest request
     ) {
         val property = propertyService.addProperty(
-                jwtService.extractUserId(jwt.toString()),
-                jwtService.extractUserRole(jwt.toString()),
+                jwtService.extractUserId(jwt.getTokenValue()),
+                jwtService.extractUserRole(jwt.getTokenValue()),
                 request.propertyName(),
                 request.propertyAddress(),
                 request.ownerId(),
