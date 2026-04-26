@@ -1,12 +1,13 @@
 package devs.group5.rms.controllers;
 
-import devs.group5.rms.data.PropertyData;
 import devs.group5.rms.dtos.ApartmentWithTenantResponse;
 import devs.group5.rms.dtos.PropertyRequest;
 import devs.group5.rms.dtos.PropertyResponse;
 import devs.group5.rms.dtos.TenantResponse;
 import devs.group5.rms.services.ApartmentService;
+import devs.group5.rms.services.JwtService;
 import devs.group5.rms.services.OwnerService;
+import devs.group5.rms.services.PropertyService;
 import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,24 +32,28 @@ import java.util.stream.Collectors;
 public class PropertyController {
     private final OwnerService ownerService;
     private final ApartmentService apartmentService;
+    private final PropertyService propertyService;
+    private final JwtService jwtService;
 
     @PostMapping
     public PropertyResponse addProperty(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody PropertyRequest request
     ) {
-        val property = new PropertyData(request.name(), request.address(), request.ownerId());
-        val response = ownerService.addProperty(
-                UUID.fromString(jwt.getSubject()),
-                property
+        val property = propertyService.addProperty(
+                jwtService.extractUserId(jwt.toString()),
+                jwtService.extractUserRole(jwt.toString()),
+                request.propertyName(),
+                request.propertyAddress(),
+                request.ownerId(),
+                request.apartmentRanges()
         );
 
-
         return new PropertyResponse(
-                response.getId(),
-                response.getName(),
-                response.getAddress(),
-                response.getOwner().getId()
+                property.getId(),
+                property.getName(),
+                property.getAddress(),
+                property.getOwner().getId()
         );
     }
 
