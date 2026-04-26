@@ -55,9 +55,11 @@ public class Property {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Owner owner;
 
+    @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Apartment> apartments;
+    private List<Apartment> apartments = new java.util.ArrayList<>();
 
+    @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Expense> expenses;
+    private List<Expense> expenses = new java.util.ArrayList<>();
 }

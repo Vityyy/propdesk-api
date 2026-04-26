@@ -42,7 +42,6 @@ public class Apartment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank
     @Positive
     @Column(name = "number", nullable = false)
     private int number;
@@ -59,7 +58,6 @@ public class Apartment {
     @Column(name = "square_meters", nullable = false)
     private BigDecimal squareMeters;
 
-    @NotNull
     @Positive
     @Column(name = "floor", nullable = false)
     private int floor;
