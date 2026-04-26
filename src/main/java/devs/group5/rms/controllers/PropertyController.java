@@ -103,10 +103,10 @@ public class PropertyController {
                                                 e.getValue().paymentStatus(),
                                                 e.getValue().squareMeters(),
                                                 e.getValue().rent(),
-                                                new TenantResponse(
+                                                e.getValue().tenant() != null ? new TenantResponse(
                                                         e.getValue().tenant().id(),
                                                         e.getValue().tenant().name()
-                                                )
+                                                ) : null
                                         )
                                 ))
                 ));
