@@ -21,20 +21,28 @@ public class ApartmentService {
 
     public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(UUID propertyId) {
         val apartments = apartmentRepository.findByProperty_Id(propertyId);
+
+
         val apartmentsWithTenants = apartments.stream()
-                .map(apartment -> new ApartmentWithTenantData(
-                        apartment.getId(),
-                        apartment.getNumber(),
-                        apartment.getDueDate(),
-                        apartment.getPaymentStatus(),
-                        apartment.getFloor(),
-                        apartment.getSquareMeters(),
-                        apartment.getRent(),
-                        new TenantData(
-                                apartment.getTenant().getId(),
-                                apartment.getTenant().getName()
-                        )
-                ))
+                .map(apartment -> {
+                    TenantData tenantData = null;
+                    val tenant = apartment.getTenant();
+
+                    if (tenant != null) {
+                        tenantData = new TenantData(tenant.getId(), tenant.getName());
+                    }
+
+                    return new ApartmentWithTenantData(
+                            apartment.getId(),
+                            apartment.getNumber(),
+                            apartment.getDueDate(),
+                            apartment.getPaymentStatus(),
+                            apartment.getFloor(),
+                            apartment.getSquareMeters(),
+                            apartment.getRent(),
+                            tenantData
+                    );
+                })
                 .toList();
 
         return apartmentsWithTenants
