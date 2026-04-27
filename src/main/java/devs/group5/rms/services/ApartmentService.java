@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,33 +32,10 @@ public class ApartmentService {
 
     @Transactional(readOnly = true)
     public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(UUID propertyId) {
-        val apartments = apartmentRepository.findByProperty_Id(propertyId);
+        val apartments = apartmentRepository.findByProperty_IdWithDetails(propertyId);
 
         val apartmentsWithTenants = apartments.stream()
-                .map(apartment -> {
-                    TenantData tenantData = null;
-                    val tenant = apartment.getTenant();
-
-                    if (tenant != null) {
-                        tenantData = new TenantData(tenant.getId(), tenant.getName(), tenant.getPhone(), tenant.getEmail());
-                    }
-
-                    val expenseDataList = apartment.getExpenses().stream()
-                            .map(e -> new ApartmentExpenseData(e.getId(), e.getAmount(), e.getDescription()))
-                            .toList();
-
-                    return new ApartmentWithTenantData(
-                            apartment.getId(),
-                            apartment.getNumber(),
-                            apartment.getDueDate(),
-                            apartment.getPaymentStatus(),
-                            apartment.getFloor(),
-                            apartment.getSquareMeters(),
-                            apartment.getRent(),
-                            tenantData,
-                            expenseDataList
-                    );
-                })
+                .map(this::mapToApartmentWithTenantData)
                 .toList();
 
         return apartmentsWithTenants
@@ -78,6 +56,62 @@ public class ApartmentService {
                         )
                 )
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, Map<Integer, Map<Integer, ApartmentWithTenantData>>> getApartmentsFromOwnerGroupedByProperty(UUID ownerId) {
+        val apartments = apartmentRepository.findByProperty_Owner_IdWithDetails(ownerId);
+
+        return apartments.stream()
+                .collect(Collectors.groupingBy(
+                        apartment -> apartment.getProperty().getId(),
+                        LinkedHashMap::new,
+                        Collectors.mapping(this::mapToApartmentWithTenantData, Collectors.toList())
+                ))
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue()
+                                .stream()
+                                .collect(Collectors.groupingBy(
+                                        ApartmentWithTenantData::floor,
+                                        LinkedHashMap::new,
+                                        Collectors.toMap(
+                                                ApartmentWithTenantData::number,
+                                                apartmentData -> apartmentData,
+                                                (first, second) -> first,
+                                                LinkedHashMap::new
+                                        )
+                                )),
+                        (first, second) -> first,
+                        LinkedHashMap::new
+                ));
+    }
+
+    private ApartmentWithTenantData mapToApartmentWithTenantData(devs.group5.rms.entities.Apartment apartment) {
+        TenantData tenantData = null;
+        val tenant = apartment.getTenant();
+
+        if (tenant != null) {
+            tenantData = new TenantData(tenant.getId(), tenant.getName(), tenant.getPhone(), tenant.getEmail());
+        }
+
+        val expenseDataList = apartment.getExpenses().stream()
+                .map(e -> new ApartmentExpenseData(e.getId(), e.getAmount(), e.getDescription()))
+                .toList();
+
+        return new ApartmentWithTenantData(
+                apartment.getId(),
+                apartment.getNumber(),
+                apartment.getDueDate(),
+                apartment.getPaymentStatus(),
+                apartment.getFloor(),
+                apartment.getSquareMeters(),
+                apartment.getRent(),
+                tenantData,
+                expenseDataList
+        );
     }
 
     @Transactional
