@@ -97,17 +97,32 @@ public class PropertyController {
                                 .stream()
                                 .collect(Collectors.toMap(
                                         Map.Entry::getKey,
-                                        e -> new ApartmentWithTenantResponse(
-                                                e.getValue().id(),
-                                                e.getValue().dueDate(),
-                                                e.getValue().paymentStatus(),
-                                                e.getValue().squareMeters(),
-                                                e.getValue().rent(),
-                                                e.getValue().tenant() != null ? new TenantResponse(
-                                                        e.getValue().tenant().id(),
-                                                        e.getValue().tenant().name()
-                                                ) : null
-                                        )
+                                        e -> {
+                                            val data = e.getValue();
+                                            TenantResponse tenantResponse = null;
+                                            if (data.tenant() != null) {
+                                                tenantResponse = new TenantResponse(
+                                                        data.tenant().id(),
+                                                        data.tenant().name(),
+                                                        data.tenant().phone(),
+                                                        data.tenant().email()
+                                                );
+                                            }
+                                            val expenses = data.expenses().stream()
+                                                    .map(ex -> new devs.group5.rms.dtos.ApartmentExpenseResponse(
+                                                            ex.id(), ex.amount(), ex.description()
+                                                    ))
+                                                    .toList();
+                                            return new ApartmentWithTenantResponse(
+                                                    data.id(),
+                                                    data.dueDate(),
+                                                    data.paymentStatus(),
+                                                    data.squareMeters(),
+                                                    data.rent(),
+                                                    tenantResponse,
+                                                    expenses
+                                            );
+                                        }
                                 ))
                 ));
     }
