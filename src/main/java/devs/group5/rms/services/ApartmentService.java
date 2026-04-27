@@ -277,6 +277,7 @@ public class ApartmentService {
         }
 
         apartment.setTenant(null);
+        apartment.setDueDate(null);
         apartmentRepository.save(apartment);
 
         // If tenant has no more apartments, remove them from DB entirely
