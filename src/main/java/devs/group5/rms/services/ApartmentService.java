@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class ApartmentService {
     private final ApartmentRepository apartmentRepository;
     private final TenantRepository tenantRepository;
+    private final devs.group5.rms.repositories.PropertyRepository propertyRepository;
 
     public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(UUID propertyId) {
         val apartments = apartmentRepository.findByProperty_Id(propertyId);
@@ -105,5 +106,38 @@ public class ApartmentService {
         }
 
         apartmentRepository.saveAll(apartments);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public devs.group5.rms.entities.Apartment addSingleApartment(UUID ownerId, devs.group5.rms.dtos.SingleApartmentCreateRequest request) {
+        val property = propertyRepository.findById(request.propertyId())
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+
+        if (!property.getOwner().getId().equals(ownerId)) {
+            throw new IllegalArgumentException("User is not the owner of this property");
+        }
+
+        val apartment = devs.group5.rms.entities.Apartment.builder()
+                .property(property)
+                .floor(request.floor())
+                .number(request.number())
+                .rent(request.rent())
+                .squareMeters(request.squareMeters())
+                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PENDING)
+                .build();
+
+        return apartmentRepository.save(apartment);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteApartment(UUID ownerId, UUID apartmentId) {
+        val apartment = apartmentRepository.findById(apartmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
+
+        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
+            throw new IllegalArgumentException("User is not the owner of this apartment");
+        }
+
+        apartmentRepository.delete(apartment);
     }
 }
