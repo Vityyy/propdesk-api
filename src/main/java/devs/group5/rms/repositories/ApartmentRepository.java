@@ -10,4 +10,6 @@ public interface ApartmentRepository extends JpaRepository<Apartment, UUID> {
     List<Apartment> findByProperty_Owner_Id(UUID ownerId);
 
     List<Apartment> findByProperty_Id(UUID propertyId);
+
+    List<Apartment> findByTenant_Id(UUID tenantId);
 }
