@@ -129,6 +129,12 @@ public class ApartmentService {
         if (request.squareMeters() != null) {
             apartment.setSquareMeters(request.squareMeters());
         }
+        if (request.dueDate() != null) {
+            apartment.setDueDate(request.dueDate());
+        }
+        if (request.paymentStatus() != null) {
+            apartment.setPaymentStatus(request.paymentStatus());
+        }
 
         return apartmentRepository.save(apartment);
     }
