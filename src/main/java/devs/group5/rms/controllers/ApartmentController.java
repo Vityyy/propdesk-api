@@ -2,7 +2,8 @@ package devs.group5.rms.controllers;
 
 import devs.group5.rms.data.ApartmentData;
 import devs.group5.rms.dtos.*;
-import devs.group5.rms.services.OwnerService;
+import devs.group5.rms.entities.Role;
+import devs.group5.rms.services.JwtService;
 import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,20 +19,22 @@ import java.util.stream.Collectors;
 @RequestMapping("/apartments")
 @AllArgsConstructor(onConstructor_ = @Autowired)
 public class ApartmentController {
-    private final OwnerService ownerService;
     private final devs.group5.rms.services.ApartmentService apartmentService;
+    private final JwtService jwtService;
 
     @PostMapping
     public List<ApartmentResponse> addApartment(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody List<ApartmentRequest> requests
     ) {
-        var ownerId = UUID.fromString(jwt.getSubject());
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
 
         return requests.stream()
                 .map(r -> {
-                    val apartment = ownerService.addApartment(
-                            ownerId,
+                    val apartment = apartmentService.addApartment(
+                            authenticatedUserId,
+                            authenticatedUserRole,
                             new ApartmentData(r.number(), r.propertyId(), r.amount_due())
                     );
                     return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
@@ -40,9 +43,23 @@ public class ApartmentController {
     }
 
     @GetMapping
-    public List<ApartmentResponse> getApartments(@AuthenticationPrincipal Jwt jwt) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        return ownerService.getApartments(ownerId)
+    public List<ApartmentResponse> getApartments(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(value = "ownerId", required = false) String ownerIdParam
+    ) {
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        UUID targetOwnerId;
+        if (authenticatedUserRole == Role.ADMIN) {
+            if (ownerIdParam == null || ownerIdParam.isBlank()) {
+                throw new IllegalArgumentException("Admin must provide ownerId parameter");
+            }
+            targetOwnerId = UUID.fromString(ownerIdParam);
+        } else {
+            targetOwnerId = authenticatedUserId;
+        }
+
+        return apartmentService.getApartmentsForUser(authenticatedUserId, authenticatedUserRole, targetOwnerId)
                 .stream()
                 .map(r -> new ApartmentResponse(r.getId(), r.getNumber(), r.getProperty().getId()))
                 .collect(Collectors.toList());
@@ -54,8 +71,9 @@ public class ApartmentController {
             @PathVariable UUID apartmentId,
             @RequestBody ApartmentUpdateRequest request
     ) {
-        var ownerId = UUID.fromString(jwt.getSubject());
-        val apartment = apartmentService.updateApartment(ownerId, apartmentId, request);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        val apartment = apartmentService.updateApartment(authenticatedUserId, authenticatedUserRole, apartmentId, request);
         return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
     }
 
@@ -64,8 +82,9 @@ public class ApartmentController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody ApartmentBulkUpdateRequest request
     ) {
-        var ownerId = UUID.fromString(jwt.getSubject());
-        apartmentService.bulkUpdateApartments(ownerId, request);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        apartmentService.bulkUpdateApartments(authenticatedUserId, authenticatedUserRole, request);
     }
 
     @PostMapping("/single")
@@ -73,8 +92,9 @@ public class ApartmentController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody SingleApartmentCreateRequest request
     ) {
-        var ownerId = UUID.fromString(jwt.getSubject());
-        val apartment = apartmentService.addSingleApartment(ownerId, request);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        val apartment = apartmentService.addSingleApartment(authenticatedUserId, authenticatedUserRole, request);
         return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
     }
 
@@ -83,8 +103,9 @@ public class ApartmentController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID apartmentId
     ) {
-        var ownerId = UUID.fromString(jwt.getSubject());
-        apartmentService.deleteApartment(ownerId, apartmentId);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        apartmentService.deleteApartment(authenticatedUserId, authenticatedUserRole, apartmentId);
     }
 
     // ─── Tenant endpoints ────────────────────────────────────────────────────
@@ -95,8 +116,9 @@ public class ApartmentController {
             @PathVariable UUID apartmentId,
             @RequestBody TenantRequest request
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        val tenantData = apartmentService.assignOrCreateTenant(ownerId, apartmentId, request);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        val tenantData = apartmentService.assignOrCreateTenant(authenticatedUserId, authenticatedUserRole, apartmentId, request);
         return new TenantResponse(tenantData.id(), tenantData.name(), tenantData.phone(), tenantData.email());
     }
 
@@ -106,8 +128,9 @@ public class ApartmentController {
             @PathVariable UUID apartmentId,
             @RequestBody TenantRequest request
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        val tenantData = apartmentService.updateTenant(ownerId, apartmentId, request);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        val tenantData = apartmentService.updateTenant(authenticatedUserId, authenticatedUserRole, apartmentId, request);
         return new TenantResponse(tenantData.id(), tenantData.name(), tenantData.phone(), tenantData.email());
     }
 
@@ -116,8 +139,9 @@ public class ApartmentController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID apartmentId
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        apartmentService.vacateApartment(ownerId, apartmentId);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        apartmentService.vacateApartment(authenticatedUserId, authenticatedUserRole, apartmentId);
     }
 
     // ─── Expense endpoints ───────────────────────────────────────────────────
@@ -127,8 +151,9 @@ public class ApartmentController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID apartmentId
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        return apartmentService.getExpensesForApartment(ownerId, apartmentId).stream()
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        return apartmentService.getExpensesForApartment(authenticatedUserId, authenticatedUserRole, apartmentId).stream()
                 .map(e -> new ApartmentExpenseResponse(e.id(), e.amount(), e.description()))
                 .toList();
     }
@@ -139,8 +164,9 @@ public class ApartmentController {
             @PathVariable UUID apartmentId,
             @RequestBody ApartmentExpenseRequest request
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        val data = apartmentService.addExpenseToApartment(ownerId, apartmentId, request);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        val data = apartmentService.addExpenseToApartment(authenticatedUserId, authenticatedUserRole, apartmentId, request);
         return new ApartmentExpenseResponse(data.id(), data.amount(), data.description());
     }
 
@@ -150,7 +176,8 @@ public class ApartmentController {
             @PathVariable UUID apartmentId,
             @PathVariable UUID expenseId
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        apartmentService.deleteExpenseFromApartment(ownerId, apartmentId, expenseId);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        apartmentService.deleteExpenseFromApartment(authenticatedUserId, authenticatedUserRole, apartmentId, expenseId);
     }
 }

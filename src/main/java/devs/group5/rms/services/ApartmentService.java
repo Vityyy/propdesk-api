@@ -2,13 +2,16 @@ package devs.group5.rms.services;
 
 import devs.group5.rms.data.ApartmentExpenseData;
 import devs.group5.rms.data.ApartmentWithTenantData;
+import devs.group5.rms.data.ApartmentData;
 import devs.group5.rms.data.TenantData;
 import devs.group5.rms.dtos.ApartmentExpenseRequest;
 import devs.group5.rms.dtos.TenantRequest;
 import devs.group5.rms.entities.Expense;
+import devs.group5.rms.entities.Role;
 import devs.group5.rms.entities.Tenant;
 import devs.group5.rms.repositories.ApartmentRepository;
 import devs.group5.rms.repositories.ExpenseRepository;
+import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.TenantRepository;
 import lombok.AllArgsConstructor;
 import lombok.val;
@@ -29,9 +32,18 @@ public class ApartmentService {
     private final TenantRepository tenantRepository;
     private final ExpenseRepository expenseRepository;
     private final devs.group5.rms.repositories.PropertyRepository propertyRepository;
+    private final OwnerRepository ownerRepository;
 
     @Transactional(readOnly = true)
-    public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(UUID propertyId) {
+    public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(
+            UUID authenticatedUserId,
+            Role authenticatedUserRole,
+            UUID propertyId
+    ) {
+        val property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, property.getOwner().getId());
+
         val apartments = apartmentRepository.findByProperty_IdWithDetails(propertyId);
 
         val apartmentsWithTenants = apartments.stream()
@@ -59,7 +71,12 @@ public class ApartmentService {
     }
 
     @Transactional(readOnly = true)
-    public Map<UUID, Map<Integer, Map<Integer, ApartmentWithTenantData>>> getApartmentsFromOwnerGroupedByProperty(UUID ownerId) {
+    public Map<UUID, Map<Integer, Map<Integer, ApartmentWithTenantData>>> getApartmentsFromOwnerGroupedByProperty(
+            UUID authenticatedUserId,
+            Role authenticatedUserRole,
+            UUID ownerId
+    ) {
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, ownerId);
         val apartments = apartmentRepository.findByProperty_Owner_IdWithDetails(ownerId);
 
         return apartments.stream()
@@ -89,6 +106,50 @@ public class ApartmentService {
                 ));
     }
 
+    @Transactional(readOnly = true)
+    public List<devs.group5.rms.entities.Apartment> getApartmentsForUser(
+            UUID authenticatedUserId,
+            Role authenticatedUserRole,
+            UUID ownerId
+    ) {
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, ownerId);
+        return apartmentRepository.findByProperty_Owner_Id(ownerId);
+    }
+
+    @Transactional
+    public devs.group5.rms.entities.Apartment addApartment(
+            UUID authenticatedUserId,
+            Role authenticatedUserRole,
+            ApartmentData data
+    ) {
+        val property = propertyRepository.findById(data.propertyId())
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, property.getOwner().getId());
+
+        val apartment = devs.group5.rms.entities.Apartment.builder()
+                .number(data.number())
+                .property(property)
+                .rent(data.rent())
+                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PAID)
+                .build();
+
+        return apartmentRepository.save(apartment);
+    }
+
+    private void ensureCanManageOwner(UUID authenticatedUserId, Role authenticatedUserRole, UUID ownerId) {
+        if (authenticatedUserRole == Role.OWNER) {
+            if (!authenticatedUserId.equals(ownerId)) {
+                throw new IllegalArgumentException("Owner cannot access another owner resources");
+            }
+            return;
+        }
+
+        // ADMIN
+        if (!ownerRepository.existsByIdAndAdmin_Id(ownerId, authenticatedUserId)) {
+            throw new IllegalArgumentException("Admin does not manage this owner");
+        }
+    }
+
     private ApartmentWithTenantData mapToApartmentWithTenantData(devs.group5.rms.entities.Apartment apartment) {
         TenantData tenantData = null;
         val tenant = apartment.getTenant();
@@ -115,13 +176,16 @@ public class ApartmentService {
     }
 
     @Transactional
-    public devs.group5.rms.entities.Apartment updateApartment(UUID ownerId, UUID apartmentId, devs.group5.rms.dtos.ApartmentUpdateRequest request) {
+    public devs.group5.rms.entities.Apartment updateApartment(
+            UUID authenticatedUserId,
+            Role authenticatedUserRole,
+            UUID apartmentId,
+            devs.group5.rms.dtos.ApartmentUpdateRequest request
+    ) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         if (request.rent() != null) {
             apartment.setRent(request.rent());
@@ -140,16 +204,14 @@ public class ApartmentService {
     }
 
     @Transactional
-    public void bulkUpdateApartments(UUID ownerId, devs.group5.rms.dtos.ApartmentBulkUpdateRequest request) {
+    public void bulkUpdateApartments(UUID authenticatedUserId, Role authenticatedUserRole, devs.group5.rms.dtos.ApartmentBulkUpdateRequest request) {
         if (request.apartmentIds() == null || request.apartmentIds().isEmpty()) {
             return;
         }
 
         val apartments = apartmentRepository.findAllById(request.apartmentIds());
         for (val apartment : apartments) {
-            if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-                throw new IllegalArgumentException("User is not the owner of all specified apartments");
-            }
+            ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
             if (request.rent() != null) {
                 apartment.setRent(request.rent());
@@ -163,13 +225,15 @@ public class ApartmentService {
     }
 
     @Transactional
-    public devs.group5.rms.entities.Apartment addSingleApartment(UUID ownerId, devs.group5.rms.dtos.SingleApartmentCreateRequest request) {
+    public devs.group5.rms.entities.Apartment addSingleApartment(
+            UUID authenticatedUserId,
+            Role authenticatedUserRole,
+            devs.group5.rms.dtos.SingleApartmentCreateRequest request
+    ) {
         val property = propertyRepository.findById(request.propertyId())
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
 
-        if (!property.getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this property");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, property.getOwner().getId());
 
         val apartment = devs.group5.rms.entities.Apartment.builder()
                 .property(property)
@@ -184,13 +248,11 @@ public class ApartmentService {
     }
 
     @Transactional
-    public void deleteApartment(UUID ownerId, UUID apartmentId) {
+    public void deleteApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         apartmentRepository.delete(apartment);
     }
@@ -202,13 +264,11 @@ public class ApartmentService {
      * exists in the DB, reuses it. Otherwise creates a new one.
      */
     @Transactional
-    public TenantData assignOrCreateTenant(UUID ownerId, UUID apartmentId, TenantRequest request) {
+    public TenantData assignOrCreateTenant(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId, TenantRequest request) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         // Reuse existing tenant by name or create a new one
         val tenant = tenantRepository.findByName(request.name())
@@ -235,13 +295,11 @@ public class ApartmentService {
      * Updates the tenant data of the tenant currently assigned to this apartment.
      */
     @Transactional
-    public TenantData updateTenant(UUID ownerId, UUID apartmentId, TenantRequest request) {
+    public TenantData updateTenant(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId, TenantRequest request) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         val tenant = apartment.getTenant();
         if (tenant == null) {
@@ -263,13 +321,11 @@ public class ApartmentService {
      * If the tenant has no more apartments after this, deletes the tenant from the DB.
      */
     @Transactional
-    public void vacateApartment(UUID ownerId, UUID apartmentId) {
+    public void vacateApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         val tenant = apartment.getTenant();
         if (tenant == null) {
@@ -289,13 +345,11 @@ public class ApartmentService {
 
     // ─── Expense management ──────────────────────────────────────────────────
 
-    public List<ApartmentExpenseData> getExpensesForApartment(UUID ownerId, UUID apartmentId) {
+    public List<ApartmentExpenseData> getExpensesForApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         return expenseRepository.findByApartment_Id(apartmentId).stream()
                 .map(e -> new ApartmentExpenseData(e.getId(), e.getAmount(), e.getDescription()))
@@ -303,13 +357,11 @@ public class ApartmentService {
     }
 
     @Transactional
-    public ApartmentExpenseData addExpenseToApartment(UUID ownerId, UUID apartmentId, ApartmentExpenseRequest request) {
+    public ApartmentExpenseData addExpenseToApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId, ApartmentExpenseRequest request) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         val expense = Expense.builder()
                 .amount(request.amount())
@@ -322,13 +374,11 @@ public class ApartmentService {
     }
 
     @Transactional
-    public void deleteExpenseFromApartment(UUID ownerId, UUID apartmentId, UUID expenseId) {
+    public void deleteExpenseFromApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId, UUID expenseId) {
         val apartment = apartmentRepository.findById(apartmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
 
-        if (!apartment.getProperty().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("User is not the owner of this apartment");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
         val expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new IllegalArgumentException("Expense not found"));
