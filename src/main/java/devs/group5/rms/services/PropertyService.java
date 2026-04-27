@@ -99,4 +99,23 @@ public class PropertyService {
 
         return propertyRepository.save(property);
     }
+
+    @org.springframework.transaction.annotation.Transactional
+    public Property updateProperty(UUID authenticatedUserId, Role authenticatedUserRole, UUID propertyId, String newName, String newAddress) {
+        val property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+
+        if (authenticatedUserRole == Role.OWNER && !property.getOwner().getId().equals(authenticatedUserId)) {
+            throw new IllegalArgumentException("User is not the owner of this property");
+        }
+
+        if (newName != null && !newName.trim().isEmpty()) {
+            property.setName(newName);
+        }
+        if (newAddress != null && !newAddress.trim().isEmpty()) {
+            property.setAddress(newAddress);
+        }
+
+        return propertyRepository.save(property);
+    }
 }

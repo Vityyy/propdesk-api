@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(onConstructor_ = @Autowired)
 public class ApartmentController {
     private final OwnerService ownerService;
+    private final devs.group5.rms.services.ApartmentService apartmentService;
 
     @PostMapping
     public List<ApartmentResponse> addApartment(
@@ -50,5 +51,44 @@ public class ApartmentController {
                 .stream()
                 .map(r -> new ApartmentResponse(r.getId(), r.getNumber(), r.getProperty().getId()))
                 .collect(Collectors.toList());
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{apartmentId}")
+    public ApartmentResponse updateApartment(
+            @AuthenticationPrincipal Jwt jwt,
+            @org.springframework.web.bind.annotation.PathVariable UUID apartmentId,
+            @RequestBody devs.group5.rms.dtos.ApartmentUpdateRequest request
+    ) {
+        var ownerId = UUID.fromString(jwt.getSubject());
+        val apartment = apartmentService.updateApartment(ownerId, apartmentId, request);
+        return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/bulk")
+    public void bulkUpdateApartments(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody devs.group5.rms.dtos.ApartmentBulkUpdateRequest request
+    ) {
+        var ownerId = UUID.fromString(jwt.getSubject());
+        apartmentService.bulkUpdateApartments(ownerId, request);
+    }
+
+    @PostMapping("/single")
+    public ApartmentResponse addSingleApartment(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody devs.group5.rms.dtos.SingleApartmentCreateRequest request
+    ) {
+        var ownerId = UUID.fromString(jwt.getSubject());
+        val apartment = apartmentService.addSingleApartment(ownerId, request);
+        return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{apartmentId}")
+    public void deleteApartment(
+            @AuthenticationPrincipal Jwt jwt,
+            @org.springframework.web.bind.annotation.PathVariable UUID apartmentId
+    ) {
+        var ownerId = UUID.fromString(jwt.getSubject());
+        apartmentService.deleteApartment(ownerId, apartmentId);
     }
 }
