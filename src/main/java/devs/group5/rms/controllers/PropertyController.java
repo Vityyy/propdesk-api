@@ -97,32 +97,34 @@ public class PropertyController {
                                 .stream()
                                 .collect(Collectors.toMap(
                                         Map.Entry::getKey,
-                                        e -> {
-                                            val data = e.getValue();
-                                            TenantResponse tenantResponse = null;
-                                            if (data.tenant() != null) {
-                                                tenantResponse = new TenantResponse(
-                                                        data.tenant().id(),
-                                                        data.tenant().name(),
-                                                        data.tenant().phone(),
-                                                        data.tenant().email()
-                                                );
-                                            }
-                                            val expenses = data.expenses().stream()
-                                                    .map(ex -> new devs.group5.rms.dtos.ApartmentExpenseResponse(
-                                                            ex.id(), ex.amount(), ex.description()
-                                                    ))
-                                                    .toList();
-                                            return new ApartmentWithTenantResponse(
-                                                    data.id(),
-                                                    data.dueDate(),
-                                                    data.paymentStatus(),
-                                                    data.squareMeters(),
-                                                    data.rent(),
-                                                    tenantResponse,
-                                                    expenses
-                                            );
-                                        }
+                                        e -> mapApartmentResponse(e.getValue())
+                                ))
+                ));
+    }
+
+    @GetMapping("/apartments")
+    public Map<UUID, Map<Integer, Map<Integer, ApartmentWithTenantResponse>>> getOwnerApartments(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        val ownerId = UUID.fromString(jwt.getSubject());
+        val apartmentsByProperty = apartmentService.getApartmentsFromOwnerGroupedByProperty(ownerId);
+
+        return apartmentsByProperty.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        propertyEntry -> propertyEntry.getValue()
+                                .entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        floorEntry -> floorEntry.getValue()
+                                                .entrySet()
+                                                .stream()
+                                                .collect(Collectors.toMap(
+                                                        Map.Entry::getKey,
+                                                        apartmentEntry -> mapApartmentResponse(apartmentEntry.getValue())
+                                                ))
                                 ))
                 ));
     }
@@ -146,6 +148,34 @@ public class PropertyController {
                 property.getName(),
                 property.getAddress(),
                 property.getOwner().getId()
+        );
+    }
+
+    private ApartmentWithTenantResponse mapApartmentResponse(devs.group5.rms.data.ApartmentWithTenantData data) {
+        TenantResponse tenantResponse = null;
+        if (data.tenant() != null) {
+            tenantResponse = new TenantResponse(
+                    data.tenant().id(),
+                    data.tenant().name(),
+                    data.tenant().phone(),
+                    data.tenant().email()
+            );
+        }
+
+        val expenses = data.expenses().stream()
+                .map(ex -> new devs.group5.rms.dtos.ApartmentExpenseResponse(
+                        ex.id(), ex.amount(), ex.description()
+                ))
+                .toList();
+
+        return new ApartmentWithTenantResponse(
+                data.id(),
+                data.dueDate(),
+                data.paymentStatus(),
+                data.squareMeters(),
+                data.rent(),
+                tenantResponse,
+                expenses
         );
     }
 }
