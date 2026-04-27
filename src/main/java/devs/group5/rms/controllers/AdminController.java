@@ -5,11 +5,14 @@ import devs.group5.rms.services.AdminService;
 import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 // Exposes admin resources used by owners when granting management access.
 @RestController
@@ -25,6 +28,18 @@ public class AdminController {
 
         return admins.stream()
                 .map(admin -> new UserResponse(admin.getId(), admin.getName()))
+                .toList();
+    }
+
+    // Lists all owners linked to the authenticated admin
+    @GetMapping("/me/owners")
+    public List<UserResponse> getMyOwners(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        val owners = adminService.getAdminOwners(UUID.fromString(jwt.getSubject()));
+
+        return owners.stream()
+                .map(owner -> new UserResponse(owner.getId(), owner.getName()))
                 .toList();
     }
 }
