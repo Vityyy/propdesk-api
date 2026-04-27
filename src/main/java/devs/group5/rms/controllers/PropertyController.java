@@ -111,4 +111,26 @@ public class PropertyController {
                                 ))
                 ));
     }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{propertyId}")
+    public PropertyResponse updateProperty(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID propertyId,
+            @RequestBody devs.group5.rms.dtos.PropertyUpdateRequest request
+    ) {
+        val property = propertyService.updateProperty(
+                jwtService.extractUserId(jwt.getTokenValue()),
+                jwtService.extractUserRole(jwt.getTokenValue()),
+                propertyId,
+                request.propertyName(),
+                request.propertyAddress()
+        );
+
+        return new PropertyResponse(
+                property.getId(),
+                property.getName(),
+                property.getAddress(),
+                property.getOwner().getId()
+        );
+    }
 }
