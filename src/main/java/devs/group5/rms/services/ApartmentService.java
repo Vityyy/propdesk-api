@@ -314,7 +314,6 @@ public class ApartmentService {
         val expense = Expense.builder()
                 .amount(request.amount())
                 .description(request.description())
-                .category("GENERAL")
                 .apartment(apartment)
                 .build();
 
