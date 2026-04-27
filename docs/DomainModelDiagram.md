@@ -24,8 +24,10 @@ classDiagram
         id [id]
         name
         due date
-        amount due
         payment_status
+        square meters
+        floor
+        rent
     }
     
     class Tenant {
