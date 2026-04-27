@@ -72,4 +72,23 @@ public class ApartmentController {
         var ownerId = UUID.fromString(jwt.getSubject());
         apartmentService.bulkUpdateApartments(ownerId, request);
     }
+
+    @PostMapping("/single")
+    public ApartmentResponse addSingleApartment(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody devs.group5.rms.dtos.SingleApartmentCreateRequest request
+    ) {
+        var ownerId = UUID.fromString(jwt.getSubject());
+        val apartment = apartmentService.addSingleApartment(ownerId, request);
+        return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{apartmentId}")
+    public void deleteApartment(
+            @AuthenticationPrincipal Jwt jwt,
+            @org.springframework.web.bind.annotation.PathVariable UUID apartmentId
+    ) {
+        var ownerId = UUID.fromString(jwt.getSubject());
+        apartmentService.deleteApartment(ownerId, apartmentId);
+    }
 }
