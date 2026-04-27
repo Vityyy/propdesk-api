@@ -28,6 +28,11 @@ public class Expense {
     @Column(nullable = false, name = "description")
     private String description;
 
+    @NotBlank
+    @Builder.Default
+    @Column(nullable = false, name = "category")
+    private String category = "GENERAL";
+
     @NotNull
     @Positive
     @Column(nullable = false, name = "amount")
