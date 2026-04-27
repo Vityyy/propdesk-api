@@ -58,8 +58,4 @@ public class Property {
     @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Apartment> apartments = new java.util.ArrayList<>();
-
-    @Builder.Default
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Expense> expenses = new java.util.ArrayList<>();
 }

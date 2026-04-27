@@ -4,6 +4,7 @@ import devs.group5.rms.entities.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 public record ApartmentWithTenantResponse(
@@ -12,7 +13,7 @@ public record ApartmentWithTenantResponse(
         PaymentStatus paymentStatus,
         BigDecimal squareMeters,
         BigDecimal rent,
-        TenantResponse tenant
+        TenantResponse tenant,
+        List<ApartmentExpenseResponse> expenses
 ) {
-
 }

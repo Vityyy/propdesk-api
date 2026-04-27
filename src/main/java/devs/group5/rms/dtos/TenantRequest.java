@@ -1,9 +1,6 @@
 package devs.group5.rms.dtos;
 
-import java.util.UUID;
-
-public record TenantResponse(
-        UUID id,
+public record TenantRequest(
         String name,
         String phone,
         String email
