@@ -4,6 +4,7 @@ import devs.group5.rms.dtos.ApartmentWithTenantResponse;
 import devs.group5.rms.dtos.PropertyRequest;
 import devs.group5.rms.dtos.PropertyResponse;
 import devs.group5.rms.dtos.TenantResponse;
+import devs.group5.rms.entities.Role;
 import devs.group5.rms.services.ApartmentService;
 import devs.group5.rms.services.JwtService;
 import devs.group5.rms.services.OwnerService;
@@ -107,8 +108,9 @@ public class PropertyController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID propertyId
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        ownerService.deleteProperty(ownerId, propertyId);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        propertyService.deleteProperty(authenticatedUserId, authenticatedUserRole, propertyId);
     }
 
     @GetMapping("/{propertyId}/apartments")
@@ -116,7 +118,9 @@ public class PropertyController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID propertyId
     ) {
-        val apartmentsByFloor = apartmentService.getApartmentsFromPropertyByFloor(propertyId);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        val apartmentsByFloor = apartmentService.getApartmentsFromPropertyByFloor(authenticatedUserId, authenticatedUserRole, propertyId);
 
         return apartmentsByFloor.entrySet()
                 .stream()
@@ -135,10 +139,25 @@ public class PropertyController {
 
     @GetMapping("/apartments")
     public Map<UUID, Map<Integer, Map<Integer, ApartmentWithTenantResponse>>> getOwnerApartments(
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(value = "ownerId", required = false) String ownerIdParam
     ) {
-        val ownerId = UUID.fromString(jwt.getSubject());
-        val apartmentsByProperty = apartmentService.getApartmentsFromOwnerGroupedByProperty(ownerId);
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        UUID targetOwnerId;
+        if (authenticatedUserRole == Role.ADMIN) {
+            if (ownerIdParam == null || ownerIdParam.isBlank()) {
+                throw new IllegalArgumentException("Admin must provide ownerId parameter");
+            }
+            targetOwnerId = UUID.fromString(ownerIdParam);
+        } else {
+            targetOwnerId = authenticatedUserId;
+        }
+        val apartmentsByProperty = apartmentService.getApartmentsFromOwnerGroupedByProperty(
+                authenticatedUserId,
+                authenticatedUserRole,
+                targetOwnerId
+        );
 
         return apartmentsByProperty.entrySet()
                 .stream()

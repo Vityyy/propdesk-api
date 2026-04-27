@@ -61,6 +61,19 @@ public class PropertyService {
                 .toList();
     }
 
+    private void ensureCanManageOwner(UUID authenticatedUserId, Role authenticatedUserRole, UUID ownerId) {
+        if (authenticatedUserRole == Role.OWNER) {
+            if (!authenticatedUserId.equals(ownerId)) {
+                throw new IllegalArgumentException("Owners cannot access other owners resources");
+            }
+            return;
+        }
+
+        if (!ownerRepository.existsByIdAndAdmin_Id(ownerId, authenticatedUserId)) {
+            throw new IllegalArgumentException("Admin does not manage this owner");
+        }
+    }
+
     public Property addProperty(
             UUID authenticatedUserId,
             Role authenticatedUserRole,
@@ -106,9 +119,7 @@ public class PropertyService {
         val property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
 
-        if (authenticatedUserRole == Role.OWNER && !property.getOwner().getId().equals(authenticatedUserId)) {
-            throw new IllegalArgumentException("User is not the owner of this property");
-        }
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, property.getOwner().getId());
 
         if (newName != null && !newName.trim().isEmpty()) {
             property.setName(newName);
@@ -118,5 +129,13 @@ public class PropertyService {
         }
 
         return propertyRepository.save(property);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteProperty(UUID authenticatedUserId, Role authenticatedUserRole, UUID propertyId) {
+        val property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, property.getOwner().getId());
+        propertyRepository.delete(property);
     }
 }
