@@ -4,6 +4,8 @@ import java.util.UUID;
 
 public record TenantData(
         UUID id,
-        String name
+        String name,
+        String phone,
+        String email
 ) {
 }

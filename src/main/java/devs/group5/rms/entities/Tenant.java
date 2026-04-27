@@ -39,6 +39,12 @@ public class Tenant {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "email")
+    private String email;
+
     @OneToMany(mappedBy = "tenant")
     private List<Apartment> apartments;
 }
