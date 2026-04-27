@@ -29,6 +29,7 @@ public class ApartmentService {
     private final ExpenseRepository expenseRepository;
     private final devs.group5.rms.repositories.PropertyRepository propertyRepository;
 
+    @Transactional(readOnly = true)
     public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(UUID propertyId) {
         val apartments = apartmentRepository.findByProperty_Id(propertyId);
 
