@@ -177,7 +177,7 @@ public class ApartmentService {
                 .number(request.number())
                 .rent(request.rent())
                 .squareMeters(request.squareMeters())
-                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PENDING)
+                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PAID)
                 .build();
 
         return apartmentRepository.save(apartment);
