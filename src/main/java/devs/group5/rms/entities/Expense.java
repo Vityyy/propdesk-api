@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -18,16 +17,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Table(name = "expenses", uniqueConstraints = @UniqueConstraint(columnNames = {"description", "property_id"}))
+@Table(name = "expenses")
 public class Expense {
     @Id
     @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @NotBlank
-    @Column(nullable = false, name = "category")
-    private String category;
 
     @NotBlank
     @Column(nullable = false, name = "description")
@@ -39,16 +34,8 @@ public class Expense {
     private BigDecimal amount;
 
     @NotNull
-    @Column(nullable = false, name = "date")
-    private LocalDate date;
-
-    @NotNull
-    @Column(nullable = false, name = "payment_status")
-    private PaymentStatus paymentStatus;
-
-    @NotNull
     @ToString.Exclude
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "property_id", nullable = false)
-    private Property property;
+    @JoinColumn(name = "apartment_id", nullable = false)
+    private Apartment apartment;
 }
