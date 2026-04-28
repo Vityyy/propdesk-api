@@ -2,12 +2,13 @@ package devs.group5.rms.services;
 
 import devs.group5.rms.data.ApartmentData;
 import devs.group5.rms.data.PropertyData;
+import devs.group5.rms.dtos.PropertyApartmentsResponse;
 import devs.group5.rms.entities.Admin;
 import devs.group5.rms.entities.Apartment;
 import devs.group5.rms.entities.Owner;
 import devs.group5.rms.entities.Property;
-import devs.group5.rms.repositories.ApartmentRepository;
 import devs.group5.rms.repositories.AdminRepository;
+import devs.group5.rms.repositories.ApartmentRepository;
 import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.PropertyRepository;
 import jakarta.transaction.Transactional;
@@ -17,9 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.math.BigDecimal;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Autowired)
@@ -34,7 +35,6 @@ public class OwnerService {
         return propertyRepository.findByOwner_Id(ownerId);
     }
 
-    @PreAuthorize("hasRole('OWNER')")
     public List<Apartment> getApartments(@NonNull UUID ownerId) {
         return apartmentRepository.findByProperty_Owner_Id(ownerId);
     }
@@ -81,13 +81,38 @@ public class OwnerService {
         }
 
         var apartment = Apartment.builder()
-                .name(data.name())
+                .number(data.number())
                 .property(property)
-                .amountDue(data.amount_due())
+                .rent(data.rent())
                 .build();
 
         apartmentRepository.save(apartment);
         return apartment;
+    }
+
+    @PreAuthorize("hasRole('OWNER')")
+    public List<PropertyApartmentsResponse> getPropertyApartmentsGrid(
+            @NonNull UUID authenticatedUserId,
+            @NonNull UUID propertyId
+    ) {
+        var property = propertyRepository.findById(propertyId).orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getOwner().getId().equals(authenticatedUserId)) {
+            throw new RuntimeException("Property does not belong to authenticated user");
+        }
+
+        return apartmentRepository.findByProperty_Id(propertyId)
+                .stream()
+                .map(apartment -> new PropertyApartmentsResponse(
+                        apartment.getId(),
+                        apartment.getRent(),
+                        apartment.getPaymentStatus(),
+                        apartment.getTenant() != null ? apartment.getTenant().getId() : null,
+                        apartment.getTenant() != null ? apartment.getTenant().getName() : null,
+                        null, // mts2 etc with the ApartmentGroup table. flatmap bersi blahblah
+                        apartment.getDueDate()
+                ))
+                .toList();
     }
 
     // Associates the authenticated owner with an existing admin account.
