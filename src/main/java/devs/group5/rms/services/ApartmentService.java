@@ -128,8 +128,10 @@ public class ApartmentService {
 
         val apartment = devs.group5.rms.entities.Apartment.builder()
                 .number(data.number())
+                .floor(1)
                 .property(property)
                 .rent(data.rent())
+                .squareMeters(java.math.BigDecimal.ONE)
                 .paymentStatus(devs.group5.rms.entities.PaymentStatus.PAID)
                 .build();
 
@@ -145,7 +147,7 @@ public class ApartmentService {
         }
 
         // ADMIN
-        if (!ownerRepository.existsByIdAndAdmin_Id(ownerId, authenticatedUserId)) {
+        if (!ownerRepository.existsByIdAndAdmin_IdAndAdminAssociationAcceptedTrue(ownerId, authenticatedUserId)) {
             throw new IllegalArgumentException("Admin does not manage this owner");
         }
     }

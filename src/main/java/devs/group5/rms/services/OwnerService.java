@@ -2,6 +2,7 @@ package devs.group5.rms.services;
 
 import devs.group5.rms.data.ApartmentData;
 import devs.group5.rms.data.PropertyData;
+import devs.group5.rms.dtos.OwnerAdminAssociationResponse;
 import devs.group5.rms.dtos.PropertyApartmentsResponse;
 import devs.group5.rms.entities.Admin;
 import devs.group5.rms.entities.Apartment;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -133,9 +135,34 @@ public class OwnerService {
             throw new IllegalArgumentException("Admin cut must be positive");
         }
 
+        if (Boolean.TRUE.equals(owner.getAdminAssociationAccepted())) {
+            throw new IllegalArgumentException("Owner is already associated with an admin");
+        }
+
         owner.setAdmin(admin);
         owner.setAdminCut(adminCut);
+        owner.setAdminAssociationAccepted(false);
 
         return ownerRepository.save(owner);
+    }
+
+    @PreAuthorize("hasRole('OWNER')")
+    @Transactional
+    public Optional<OwnerAdminAssociationResponse> getAssociatedAdmin(@NonNull UUID authenticatedUserId) {
+        Owner owner = ownerRepository.findById(authenticatedUserId)
+                .orElseThrow(() -> new RuntimeException("Owner does not exist"));
+
+        if (owner.getAdmin() == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new OwnerAdminAssociationResponse(
+                owner.getId(),
+                owner.getName(),
+                owner.getAdmin().getId(),
+                owner.getAdmin().getName(),
+                owner.getAdminCut(),
+                owner.getAdminAssociationAccepted()
+        ));
     }
 }

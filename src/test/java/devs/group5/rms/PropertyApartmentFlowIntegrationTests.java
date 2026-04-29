@@ -93,9 +93,11 @@ class PropertyApartmentFlowIntegrationTests {
                 "/properties",
                 """
                         {
-                          "name": "Edificio Central",
-                          "address": "Av. Siempre Viva 742",
-                          "ownerId": "%s"
+                          "propertyName": "Edificio Central",
+                          "propertyAddress": "Av. Siempre Viva 742",
+                          "pictureUrl": "",
+                          "ownerId": "%s",
+                          "apartmentRanges": []
                         }
                         """.formatted(ownerId),
                 accessToken
