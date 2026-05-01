@@ -9,6 +9,7 @@ public record OwnerAdminAssociationResponse(
         String ownerName,
         UUID adminId,
         String adminName,
-        BigDecimal adminCut
+        BigDecimal adminCut,
+        Boolean associationAccepted
 ) {
 }

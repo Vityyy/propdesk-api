@@ -68,9 +68,11 @@ class OwnerAdminAssociationIntegrationTests {
                 "/properties",
                 """
                         {
-                          "name": "Torre Norte",
-                          "address": "Calle 123",
-                          "ownerId": "%s"
+                          "propertyName": "Torre Norte",
+                          "propertyAddress": "Calle 123",
+                          "pictureUrl": "",
+                          "ownerId": "%s",
+                          "apartmentRanges": []
                         }
                         """.formatted(ownerId),
                 ownerToken
@@ -78,6 +80,23 @@ class OwnerAdminAssociationIntegrationTests {
 
         assertThat(propertyResponse.statusCode()).isEqualTo(200);
         var propertyId = UUID.fromString(objectMapper.readTree(propertyResponse.body()).get("id").asText());
+
+        var apartmentResponse = postJson(
+                "/apartments",
+                """
+                        [
+                          {
+                            "number": 1,
+                            "propertyId": "%s",
+                            "amount_due": 1000.00
+                          }
+                        ]
+                        """.formatted(propertyId),
+                ownerToken
+        );
+
+        assertThat(apartmentResponse.statusCode()).isEqualTo(200);
+        var apartmentId = UUID.fromString(objectMapper.readTree(apartmentResponse.body()).get(0).get("id").asText());
 
         var associationResponse = postJson(
                 "/owners/me/admin",
@@ -97,20 +116,39 @@ class OwnerAdminAssociationIntegrationTests {
         assertThat(associationJson.get("ownerId").asText()).isEqualTo(ownerId.toString());
         assertThat(associationJson.get("adminId").asText()).isEqualTo(adminId.toString());
         assertThat(associationJson.get("adminCut").decimalValue()).isEqualByComparingTo(new BigDecimal("12.5"));
+        assertThat(associationJson.get("associationAccepted").asBoolean()).isFalse();
 
         var adminToken = login(adminName, password);
 
-        var expenseResponse = postJson(
-                "/expenses",
+        var pendingExpenseResponse = postJson(
+                "/apartments/%s/expenses".formatted(apartmentId),
                 """
                         {
-                          "category": "Maintenance",
                           "description": "Lobby lights",
-                          "amount": 1250.00,
-                          "date": "2026-04-19",
-                          "propertyId": "%s"
+                          "amount": 1250.00
                         }
-                        """.formatted(propertyId),
+                        """,
+                adminToken
+        );
+
+        assertThat(pendingExpenseResponse.statusCode()).isEqualTo(400);
+
+        var acceptResponse = postJson(
+                "/admins/me/owners/%s/accept".formatted(ownerId),
+                "{}",
+                adminToken
+        );
+
+        assertThat(acceptResponse.statusCode()).isEqualTo(200);
+
+        var expenseResponse = postJson(
+                "/apartments/%s/expenses".formatted(apartmentId),
+                """
+                        {
+                          "description": "Lobby lights",
+                          "amount": 1250.00
+                        }
+                        """,
                 adminToken
         );
 
@@ -126,13 +164,63 @@ class OwnerAdminAssociationIntegrationTests {
                     assertThat(owner.getAdmin()).isNotNull();
                     assertThat(owner.getAdmin().getId()).isEqualTo(adminId);
                     assertThat(owner.getAdminCut()).isEqualByComparingTo(new BigDecimal("12.5"));
+                    assertThat(owner.getAdminAssociationAccepted()).isTrue();
                 });
 
         assertThat(expenseRepository.findById(expenseId))
                 .get()
                 .satisfies(expense -> {
-                    assertThat(expense.getProperty().getId()).isEqualTo(propertyId);
+                    assertThat(expense.getApartment().getId()).isEqualTo(apartmentId);
                     assertThat(expense.getDescription()).isEqualTo("Lobby lights");
+                });
+    }
+
+    @Test
+    void adminCanAcceptOwnerRequestAssignedToHim() throws Exception {
+        var suffix = UUID.randomUUID().toString();
+        var ownerName = "owner-" + suffix;
+        var adminName = "admin-" + suffix;
+        var password = "password123";
+
+        var ownerId = registerOwner(ownerName, password);
+        var adminId = registerAdmin(adminName, password);
+        var ownerToken = login(ownerName, password);
+        var adminToken = login(adminName, password);
+
+        var requestResponse = postJson(
+                "/owners/me/admin",
+                """
+                        {
+                          "adminId": "%s",
+                          "adminCut": 8.5
+                        }
+                        """.formatted(adminId),
+                ownerToken
+        );
+
+        assertThat(requestResponse.statusCode()).isEqualTo(200);
+
+        var associationResponse = postJson(
+                "/admins/me/owners/%s/accept".formatted(ownerId),
+                "{}",
+                adminToken
+        );
+
+        assertThat(associationResponse.statusCode()).isEqualTo(200);
+
+        JsonNode associationJson = objectMapper.readTree(associationResponse.body());
+        assertThat(associationJson.get("ownerId").asText()).isEqualTo(ownerId.toString());
+        assertThat(associationJson.get("adminId").asText()).isEqualTo(adminId.toString());
+        assertThat(associationJson.get("adminCut").decimalValue()).isEqualByComparingTo(new BigDecimal("8.5"));
+        assertThat(associationJson.get("associationAccepted").asBoolean()).isTrue();
+
+        assertThat(ownerRepository.findById(ownerId))
+                .get()
+                .satisfies(owner -> {
+                    assertThat(owner.getAdmin()).isNotNull();
+                    assertThat(owner.getAdmin().getId()).isEqualTo(adminId);
+                    assertThat(owner.getAdminCut()).isEqualByComparingTo(new BigDecimal("8.5"));
+                    assertThat(owner.getAdminAssociationAccepted()).isTrue();
                 });
     }
 

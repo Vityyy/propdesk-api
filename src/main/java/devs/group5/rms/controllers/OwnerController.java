@@ -6,8 +6,10 @@ import devs.group5.rms.services.OwnerService;
 import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +24,16 @@ import java.util.UUID;
 public class OwnerController {
     private final OwnerService ownerService;
 
-    // Associates the authenticated owner with the chosen admin account.
+    @GetMapping("/me/admin")
+    public ResponseEntity<OwnerAdminAssociationResponse> getAssociatedAdmin(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ownerService.getAssociatedAdmin(UUID.fromString(jwt.getSubject()))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    // Sends an association request from the authenticated owner to the chosen admin.
     @PostMapping("/me/admin")
     public OwnerAdminAssociationResponse associateAdmin(
             @AuthenticationPrincipal Jwt jwt,
@@ -39,7 +50,8 @@ public class OwnerController {
                 owner.getName(),
                 owner.getAdmin().getId(),
                 owner.getAdmin().getName(),
-                owner.getAdminCut()
+                owner.getAdminCut(),
+                owner.getAdminAssociationAccepted()
         );
     }
 }

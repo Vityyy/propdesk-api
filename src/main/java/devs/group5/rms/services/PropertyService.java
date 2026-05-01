@@ -69,7 +69,7 @@ public class PropertyService {
             return;
         }
 
-        if (!ownerRepository.existsByIdAndAdmin_Id(ownerId, authenticatedUserId)) {
+        if (!ownerRepository.existsByIdAndAdmin_IdAndAdminAssociationAcceptedTrue(ownerId, authenticatedUserId)) {
             throw new IllegalArgumentException("Admin does not manage this owner");
         }
     }
@@ -84,7 +84,7 @@ public class PropertyService {
     ) {
         val owner = switch (authenticatedUserRole) {
             case ADMIN -> ownerRepository
-                    .findByIdAndAdmin_Id(ownerId, authenticatedUserId)
+                    .findByIdAndAdmin_IdAndAdminAssociationAcceptedTrue(ownerId, authenticatedUserId)
                     .orElseThrow(() -> new IllegalArgumentException("Admin %s does not work with owner %s".formatted(authenticatedUserId, ownerId)));
 
             case OWNER -> {
