@@ -38,6 +38,16 @@ public class Payment {
     @Column(nullable = false, name = "type")
     private PaymentType type;
 
+    @Column(name = "billing_month")
+    private Integer billingMonth;
+
+    @Column(name = "billing_year")
+    private Integer billingYear;
+
+    @Builder.Default
+    @Column(name = "is_cancelled", nullable = false)
+    private boolean isCancelled = false;
+
     @NotNull
     @ToString.Exclude
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
