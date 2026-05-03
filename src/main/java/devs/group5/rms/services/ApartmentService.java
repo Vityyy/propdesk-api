@@ -33,6 +33,7 @@ public class ApartmentService {
     private final ExpenseRepository expenseRepository;
     private final devs.group5.rms.repositories.PropertyRepository propertyRepository;
     private final OwnerRepository ownerRepository;
+    private final devs.group5.rms.repositories.PaymentRepository paymentRepository;
 
     @Transactional(readOnly = true)
     public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(
@@ -199,6 +200,34 @@ public class ApartmentService {
             apartment.setDueDate(request.dueDate());
         }
         if (request.paymentStatus() != null) {
+            int currentMonth = java.time.LocalDate.now().getMonthValue();
+            int currentYear = java.time.LocalDate.now().getYear();
+
+            if (request.paymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID && apartment.getPaymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID) {
+                val existingPayment = paymentRepository.findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                        apartment.getId(), devs.group5.rms.entities.PaymentType.RENT, currentYear, currentMonth);
+                
+                if (existingPayment.isEmpty()) {
+                    val payment = devs.group5.rms.entities.Payment.builder()
+                            .apartment(apartment)
+                            .amount(apartment.getRent())
+                            .paymentDate(java.time.LocalDate.now())
+                            .billingMonth(currentMonth)
+                            .billingYear(currentYear)
+                            .type(devs.group5.rms.entities.PaymentType.RENT)
+                            .isCancelled(false)
+                            .build();
+                    paymentRepository.save(payment);
+                }
+            } else if (request.paymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID && apartment.getPaymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID) {
+                val existingPayment = paymentRepository.findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                        apartment.getId(), devs.group5.rms.entities.PaymentType.RENT, currentYear, currentMonth);
+                
+                existingPayment.ifPresent(payment -> {
+                    payment.setCancelled(true);
+                    paymentRepository.save(payment);
+                });
+            }
             apartment.setPaymentStatus(request.paymentStatus());
         }
 
@@ -372,6 +401,18 @@ public class ApartmentService {
                 .build();
 
         val saved = expenseRepository.save(expense);
+
+        val payment = devs.group5.rms.entities.Payment.builder()
+                .apartment(apartment)
+                .amount(saved.getAmount())
+                .paymentDate(java.time.LocalDate.now())
+                .billingMonth(java.time.LocalDate.now().getMonthValue())
+                .billingYear(java.time.LocalDate.now().getYear())
+                .type(devs.group5.rms.entities.PaymentType.EXPENSE)
+                .isCancelled(false)
+                .build();
+        paymentRepository.save(payment);
+
         return new ApartmentExpenseData(saved.getId(), saved.getAmount(), saved.getDescription());
     }
 
