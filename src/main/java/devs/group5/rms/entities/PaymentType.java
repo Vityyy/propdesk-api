@@ -2,5 +2,6 @@ package devs.group5.rms.entities;
 
 public enum PaymentType {
     RENT,
-    EXPENSE
+    EXPENSE,
+    MAINTENANCE_FEE
 }
