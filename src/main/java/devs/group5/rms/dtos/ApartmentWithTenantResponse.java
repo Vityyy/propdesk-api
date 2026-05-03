@@ -14,6 +14,7 @@ public record ApartmentWithTenantResponse(
         BigDecimal squareMeters,
         BigDecimal rent,
         TenantResponse tenant,
-        List<ApartmentExpenseResponse> expenses
+        List<ApartmentExpenseResponse> expenses,
+        List<MaintenanceFeeResponse> maintenanceFees
 ) {
 }
