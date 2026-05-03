@@ -25,4 +25,10 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
             devs.group5.rms.entities.PaymentType type, 
             Integer billingYear, 
             Integer billingMonth);
+
+    List<Payment> findAllByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+            UUID apartmentId, 
+            devs.group5.rms.entities.PaymentType type, 
+            Integer billingYear, 
+            Integer billingMonth);
 }

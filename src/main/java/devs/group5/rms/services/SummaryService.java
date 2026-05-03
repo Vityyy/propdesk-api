@@ -54,7 +54,8 @@ public class SummaryService {
                 .toList();
 
         BigDecimal collectedThisMonth = sumAmount(thisMonthPayments, PaymentType.RENT);
-        BigDecimal expensesThisMonth = sumAmount(thisMonthPayments, PaymentType.EXPENSE);
+        BigDecimal expensesThisMonth = sumAmount(thisMonthPayments, PaymentType.EXPENSE)
+                .add(sumAmount(thisMonthPayments, PaymentType.MAINTENANCE_FEE));
 
         // Last Month
         val lastMonthPayments = allPayments.stream()
@@ -62,7 +63,8 @@ public class SummaryService {
                 .toList();
 
         BigDecimal collectedLastMonth = sumAmount(lastMonthPayments, PaymentType.RENT);
-        BigDecimal expensesLastMonth = sumAmount(lastMonthPayments, PaymentType.EXPENSE);
+        BigDecimal expensesLastMonth = sumAmount(lastMonthPayments, PaymentType.EXPENSE)
+                .add(sumAmount(lastMonthPayments, PaymentType.MAINTENANCE_FEE));
 
         // Trends
         String collectedTrend = calculateTrend(collectedLastMonth, collectedThisMonth);
@@ -111,7 +113,8 @@ public class SummaryService {
                     .toList();
             
             BigDecimal monthRev = sumAmount(monthPayments, PaymentType.RENT);
-            BigDecimal monthExp = sumAmount(monthPayments, PaymentType.EXPENSE);
+            BigDecimal monthExp = sumAmount(monthPayments, PaymentType.EXPENSE)
+                    .add(sumAmount(monthPayments, PaymentType.MAINTENANCE_FEE));
             BigDecimal monthComm = monthRev.multiply(adminCommissionPct).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             BigDecimal monthProfit = monthRev.subtract(monthExp).subtract(monthComm);
             
