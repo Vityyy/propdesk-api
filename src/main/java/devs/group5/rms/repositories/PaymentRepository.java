@@ -11,12 +11,18 @@ import java.util.UUID;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     
-    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId")
+    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId AND p.isCancelled = false")
     List<Payment> findByOwnerId(@Param("ownerId") UUID ownerId);
     
-    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId AND p.paymentDate >= :startDate AND p.paymentDate <= :endDate")
+    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId AND p.paymentDate >= :startDate AND p.paymentDate <= :endDate AND p.isCancelled = false")
     List<Payment> findByOwnerIdAndDateRange(
             @Param("ownerId") UUID ownerId, 
             @Param("startDate") LocalDate startDate, 
             @Param("endDate") LocalDate endDate);
+
+    java.util.Optional<Payment> findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+            UUID apartmentId, 
+            devs.group5.rms.entities.PaymentType type, 
+            Integer billingYear, 
+            Integer billingMonth);
 }
