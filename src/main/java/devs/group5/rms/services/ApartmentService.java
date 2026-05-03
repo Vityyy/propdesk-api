@@ -3,14 +3,19 @@ package devs.group5.rms.services;
 import devs.group5.rms.data.ApartmentExpenseData;
 import devs.group5.rms.data.ApartmentWithTenantData;
 import devs.group5.rms.data.ApartmentData;
+import devs.group5.rms.data.MaintenanceFeeData;
 import devs.group5.rms.data.TenantData;
 import devs.group5.rms.dtos.ApartmentExpenseRequest;
+import devs.group5.rms.dtos.MaintenanceFeeRequest;
+import devs.group5.rms.dtos.TenantRequest;
 import devs.group5.rms.dtos.TenantRequest;
 import devs.group5.rms.entities.Expense;
+import devs.group5.rms.entities.MaintenanceFee;
 import devs.group5.rms.entities.Role;
 import devs.group5.rms.entities.Tenant;
 import devs.group5.rms.repositories.ApartmentRepository;
 import devs.group5.rms.repositories.ExpenseRepository;
+import devs.group5.rms.repositories.MaintenanceFeeRepository;
 import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.TenantRepository;
 import lombok.AllArgsConstructor;
@@ -31,6 +36,7 @@ public class ApartmentService {
     private final ApartmentRepository apartmentRepository;
     private final TenantRepository tenantRepository;
     private final ExpenseRepository expenseRepository;
+    private final MaintenanceFeeRepository maintenanceFeeRepository;
     private final devs.group5.rms.repositories.PropertyRepository propertyRepository;
     private final OwnerRepository ownerRepository;
     private final devs.group5.rms.repositories.PaymentRepository paymentRepository;
@@ -165,6 +171,11 @@ public class ApartmentService {
                 .map(e -> new ApartmentExpenseData(e.getId(), e.getAmount(), e.getDescription()))
                 .toList();
 
+        // Fetch maintenance fees explicitly to avoid lazy-load issues
+        val maintenanceFeeDataList = maintenanceFeeRepository.findByApartment_Id(apartment.getId()).stream()
+                .map(f -> new MaintenanceFeeData(f.getId(), f.getCategory(), f.getDescription(), f.getAmount()))
+                .toList();
+
         return new ApartmentWithTenantData(
                 apartment.getId(),
                 apartment.getNumber(),
@@ -174,7 +185,8 @@ public class ApartmentService {
                 apartment.getSquareMeters(),
                 apartment.getRent(),
                 tenantData,
-                expenseDataList
+                expenseDataList,
+                maintenanceFeeDataList
         );
     }
 
@@ -219,6 +231,26 @@ public class ApartmentService {
                             .build();
                     paymentRepository.save(payment);
                 }
+
+                // Generate MAINTENANCE_FEE payments for the month
+                for (val fee : apartment.getMaintenanceFees()) {
+                    val existingFeePayment = paymentRepository.findAllByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                            apartment.getId(), devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE, currentYear, currentMonth)
+                            .stream().filter(p -> p.getAmount().compareTo(fee.getAmount()) == 0).findFirst();
+                    
+                    if (existingFeePayment.isEmpty()) {
+                        val feePayment = devs.group5.rms.entities.Payment.builder()
+                                .apartment(apartment)
+                                .amount(fee.getAmount())
+                                .paymentDate(java.time.LocalDate.now())
+                                .billingMonth(currentMonth)
+                                .billingYear(currentYear)
+                                .type(devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE)
+                                .isCancelled(false)
+                                .build();
+                        paymentRepository.save(feePayment);
+                    }
+                }
             } else if (request.paymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID && apartment.getPaymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID) {
                 val existingPayment = paymentRepository.findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
                         apartment.getId(), devs.group5.rms.entities.PaymentType.RENT, currentYear, currentMonth);
@@ -227,6 +259,14 @@ public class ApartmentService {
                     payment.setCancelled(true);
                     paymentRepository.save(payment);
                 });
+
+                // Cancel MAINTENANCE_FEE payments for the month
+                val existingFeePayments = paymentRepository.findAllByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                        apartment.getId(), devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE, currentYear, currentMonth);
+                for (val feePayment : existingFeePayments) {
+                    feePayment.setCancelled(true);
+                    paymentRepository.save(feePayment);
+                }
             }
             apartment.setPaymentStatus(request.paymentStatus());
         }
@@ -431,5 +471,55 @@ public class ApartmentService {
         }
 
         expenseRepository.delete(expense);
+    }
+
+    // ─── Maintenance Fee management ──────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<MaintenanceFeeData> getMaintenanceFeesForApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId) {
+        val apartment = apartmentRepository.findById(apartmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
+
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
+
+        return maintenanceFeeRepository.findByApartment_Id(apartmentId).stream()
+                .map(f -> new MaintenanceFeeData(f.getId(), f.getCategory(), f.getDescription(), f.getAmount()))
+                .toList();
+    }
+
+    @Transactional
+    public MaintenanceFeeData addMaintenanceFeeToApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId, MaintenanceFeeRequest request) {
+        val apartment = apartmentRepository.findById(apartmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
+
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
+
+        val fee = MaintenanceFee.builder()
+                .category(request.category())
+                .description(request.description())
+                .amount(request.amount())
+                .apartment(apartment)
+                .build();
+
+        val saved = maintenanceFeeRepository.save(fee);
+
+        return new MaintenanceFeeData(saved.getId(), saved.getCategory(), saved.getDescription(), saved.getAmount());
+    }
+
+    @Transactional
+    public void deleteMaintenanceFeeFromApartment(UUID authenticatedUserId, Role authenticatedUserRole, UUID apartmentId, UUID maintenanceFeeId) {
+        val apartment = apartmentRepository.findById(apartmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Apartment not found"));
+
+        ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
+
+        val fee = maintenanceFeeRepository.findById(maintenanceFeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Maintenance fee not found"));
+
+        if (!fee.getApartment().getId().equals(apartmentId)) {
+            throw new IllegalArgumentException("Maintenance fee does not belong to this apartment");
+        }
+
+        maintenanceFeeRepository.delete(fee);
     }
 }
