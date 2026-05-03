@@ -1,6 +1,7 @@
 package devs.group5.rms.controllers;
 
 import devs.group5.rms.dtos.ApartmentWithTenantResponse;
+import devs.group5.rms.dtos.MaintenanceFeeResponse;
 import devs.group5.rms.dtos.PropertyRequest;
 import devs.group5.rms.dtos.PropertyResponse;
 import devs.group5.rms.dtos.TenantResponse;
@@ -218,6 +219,12 @@ public class PropertyController {
                 ))
                 .toList();
 
+        val maintenanceFees = data.maintenanceFees().stream()
+                .map(f -> new MaintenanceFeeResponse(
+                        f.id(), f.category(), f.description(), f.amount()
+                ))
+                .toList();
+
         return new ApartmentWithTenantResponse(
                 data.id(),
                 data.dueDate(),
@@ -225,7 +232,8 @@ public class PropertyController {
                 data.squareMeters(),
                 data.rent(),
                 tenantResponse,
-                expenses
+                expenses,
+                maintenanceFees
         );
     }
 }
