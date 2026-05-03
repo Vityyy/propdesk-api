@@ -33,6 +33,7 @@ public class ApartmentService {
     private final ExpenseRepository expenseRepository;
     private final devs.group5.rms.repositories.PropertyRepository propertyRepository;
     private final OwnerRepository ownerRepository;
+    private final devs.group5.rms.repositories.PaymentRepository paymentRepository;
 
     @Transactional(readOnly = true)
     public Map<Integer, Map<Integer, ApartmentWithTenantData>> getApartmentsFromPropertyByFloor(
@@ -199,6 +200,15 @@ public class ApartmentService {
             apartment.setDueDate(request.dueDate());
         }
         if (request.paymentStatus() != null) {
+            if (request.paymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID && apartment.getPaymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID) {
+                val payment = devs.group5.rms.entities.Payment.builder()
+                        .apartment(apartment)
+                        .amount(apartment.getRent())
+                        .paymentDate(java.time.LocalDate.now())
+                        .type(devs.group5.rms.entities.PaymentType.RENT)
+                        .build();
+                paymentRepository.save(payment);
+            }
             apartment.setPaymentStatus(request.paymentStatus());
         }
 
@@ -372,6 +382,15 @@ public class ApartmentService {
                 .build();
 
         val saved = expenseRepository.save(expense);
+
+        val payment = devs.group5.rms.entities.Payment.builder()
+                .apartment(apartment)
+                .amount(saved.getAmount())
+                .paymentDate(java.time.LocalDate.now())
+                .type(devs.group5.rms.entities.PaymentType.EXPENSE)
+                .build();
+        paymentRepository.save(payment);
+
         return new ApartmentExpenseData(saved.getId(), saved.getAmount(), saved.getDescription());
     }
 
