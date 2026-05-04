@@ -35,7 +35,7 @@ public class ApartmentController {
                     val apartment = apartmentService.addApartment(
                             authenticatedUserId,
                             authenticatedUserRole,
-                            new ApartmentData(r.number(), r.propertyId(), r.amount_due())
+                            new ApartmentData(r.number(), r.propertyId(), r.amount_due(), r.dueDate(), r.paymentStatus())
                     );
                     return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
                 })

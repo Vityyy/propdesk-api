@@ -47,7 +47,7 @@ public class PropertyService {
                                 .squareMeters(apartmentsRange.squareMeters())
                                 .floor(floor)
                                 .rent(apartmentsRange.rentValue())
-                                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PAID)
+                                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PENDING)
                                 .property(property)
                                 .build()
                         )

@@ -83,7 +83,7 @@ public class ApartmentSteps {
             var authToken = new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("ROLE_" + Role.OWNER.name())));
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            ApartmentRequest req = new ApartmentRequest(apartmentNumber, property.getId(), new BigDecimal(amount));
+            ApartmentRequest req = new ApartmentRequest(apartmentNumber, property.getId(), new BigDecimal(amount), null, null);
             response = apartmentController.addApartment(jwt, List.of(req));
             // clear context to avoid leaking auth between scenarios
             SecurityContextHolder.clearContext();
