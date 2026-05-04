@@ -1,7 +1,6 @@
-apackage devs.group5.rms.services;
+package devs.group5.rms.services;
 
 import devs.group5.rms.dtos.SummaryResponse;
-import devs.group5.rms.entities.Owner;
 import devs.group5.rms.entities.Payment;
 import devs.group5.rms.entities.PaymentStatus;
 import devs.group5.rms.entities.PaymentType;
@@ -22,9 +21,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Autowired)
@@ -47,7 +44,7 @@ public class SummaryService {
         val endOfLastMonth = startOfThisMonth.minusDays(1);
 
         val allPayments = paymentRepository.findByOwnerId(ownerId);
-        
+
         // This Month
         val thisMonthPayments = allPayments.stream()
                 .filter(p -> !p.getPaymentDate().isBefore(startOfThisMonth) && !p.getPaymentDate().isAfter(endOfThisMonth))
@@ -71,7 +68,7 @@ public class SummaryService {
         String expensesTrend = calculateTrend(expensesLastMonth, expensesThisMonth);
 
         // Current Tenants Status
-         val apartments = apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId);
+        val apartments = apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId);
 
         long totalTenantsCount = 0;
         long unpaidTenantsCount = 0;
@@ -102,22 +99,22 @@ public class SummaryService {
         // Historical Data (Last 6 months including current)
         List<SummaryResponse.MonthlySummaryData> historicalData = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy");
-        
+
         for (int i = 5; i >= 0; i--) {
             YearMonth ym = YearMonth.now().minusMonths(i);
             LocalDate start = ym.atDay(1);
             LocalDate end = ym.atEndOfMonth();
-            
+
             val monthPayments = allPayments.stream()
                     .filter(p -> !p.getPaymentDate().isBefore(start) && !p.getPaymentDate().isAfter(end))
                     .toList();
-            
+
             BigDecimal monthRev = sumAmount(monthPayments, PaymentType.RENT);
             BigDecimal monthExp = sumAmount(monthPayments, PaymentType.EXPENSE)
                     .add(sumAmount(monthPayments, PaymentType.MAINTENANCE_FEE));
             BigDecimal monthComm = monthRev.multiply(adminCommissionPct).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             BigDecimal monthProfit = monthRev.subtract(monthExp).subtract(monthComm);
-            
+
             historicalData.add(new SummaryResponse.MonthlySummaryData(
                     ym.format(formatter),
                     monthRev,
@@ -152,10 +149,10 @@ public class SummaryService {
             }
             return "+100% from last month";
         }
-        
+
         BigDecimal diff = current.subtract(previous);
         BigDecimal pct = diff.divide(previous, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
-        
+
         String sign = pct.compareTo(BigDecimal.ZERO) >= 0 ? "+" : "";
         return String.format("%s%.1f%% from last month", sign, pct);
     }
