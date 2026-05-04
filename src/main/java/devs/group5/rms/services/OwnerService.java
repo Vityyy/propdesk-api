@@ -34,11 +34,11 @@ public class OwnerService {
 
     @PreAuthorize("hasRole('OWNER')")
     public List<Property> getProperties(@NonNull UUID ownerId) {
-        return propertyRepository.findByOwner_Id(ownerId);
+        return propertyRepository.findByOwner_IdAndIsDeletedFalse(ownerId);
     }
 
     public List<Apartment> getApartments(@NonNull UUID ownerId) {
-        return apartmentRepository.findByProperty_Owner_Id(ownerId);
+        return apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId);
     }
 
     @PreAuthorize("hasRole('OWNER')")
@@ -71,7 +71,17 @@ public class OwnerService {
             throw new RuntimeException("Property does not belong to authenticated user");
         }
 
-        propertyRepository.delete(property);
+        if (property.isDeleted()) {
+            return;
+        }
+
+        property.setDeleted(true);
+        var apartments = apartmentRepository.findByProperty_Id(propertyId);
+        for (var apartment : apartments) {
+            apartment.setDeleted(true);
+        }
+        apartmentRepository.saveAll(apartments);
+        propertyRepository.save(property);
     }
 
     @PreAuthorize("hasRole('OWNER')")
@@ -103,7 +113,7 @@ public class OwnerService {
             throw new RuntimeException("Property does not belong to authenticated user");
         }
 
-        return apartmentRepository.findByProperty_Id(propertyId)
+        return apartmentRepository.findByProperty_IdAndIsDeletedFalse(propertyId)
                 .stream()
                 .map(apartment -> new PropertyApartmentsResponse(
                         apartment.getId(),

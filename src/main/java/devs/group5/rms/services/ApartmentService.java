@@ -120,7 +120,7 @@ public class ApartmentService {
             UUID ownerId
     ) {
         ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, ownerId);
-        return apartmentRepository.findByProperty_Owner_Id(ownerId);
+        return apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId);
     }
 
     @Transactional
@@ -325,7 +325,12 @@ public class ApartmentService {
 
         ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
-        apartmentRepository.delete(apartment);
+        if (apartment.isDeleted()) {
+            return;
+        }
+
+        apartment.setDeleted(true);
+        apartmentRepository.save(apartment);
     }
 
     // ─── Tenant management ───────────────────────────────────────────────────
@@ -408,7 +413,7 @@ public class ApartmentService {
         apartmentRepository.save(apartment);
 
         // If tenant has no more apartments, remove them from DB entirely
-        val remainingApartments = apartmentRepository.findByTenant_Id(tenant.getId());
+        val remainingApartments = apartmentRepository.findByTenant_IdAndIsDeletedFalse(tenant.getId());
         if (remainingApartments.isEmpty()) {
             tenantRepository.delete(tenant);
         }

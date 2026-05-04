@@ -1,4 +1,4 @@
-package devs.group5.rms.services;
+apackage devs.group5.rms.services;
 
 import devs.group5.rms.dtos.SummaryResponse;
 import devs.group5.rms.entities.Owner;
@@ -71,8 +71,8 @@ public class SummaryService {
         String expensesTrend = calculateTrend(expensesLastMonth, expensesThisMonth);
 
         // Current Tenants Status
-        val apartments = apartmentRepository.findByProperty_Owner_Id(ownerId);
-        
+         val apartments = apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId);
+
         long totalTenantsCount = 0;
         long unpaidTenantsCount = 0;
         BigDecimal unpaidAmount = BigDecimal.ZERO;

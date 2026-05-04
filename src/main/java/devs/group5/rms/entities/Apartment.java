@@ -90,4 +90,8 @@ public class Apartment {
     @BatchSize(size = 30)
     @OneToMany(mappedBy = "apartment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MaintenanceFee> maintenanceFees = new ArrayList<>();
+
+    @Builder.Default
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 }

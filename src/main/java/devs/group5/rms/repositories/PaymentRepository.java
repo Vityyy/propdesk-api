@@ -11,10 +11,10 @@ import java.util.UUID;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     
-    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId AND p.isCancelled = false")
+    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId AND p.isCancelled = false AND p.apartment.isDeleted = false AND p.apartment.property.isDeleted = false")
     List<Payment> findByOwnerId(@Param("ownerId") UUID ownerId);
     
-    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId AND p.paymentDate >= :startDate AND p.paymentDate <= :endDate AND p.isCancelled = false")
+    @Query("SELECT p FROM Payment p WHERE p.apartment.property.owner.id = :ownerId AND p.paymentDate >= :startDate AND p.paymentDate <= :endDate AND p.isCancelled = false AND p.apartment.isDeleted = false AND p.apartment.property.isDeleted = false")
     List<Payment> findByOwnerIdAndDateRange(
             @Param("ownerId") UUID ownerId, 
             @Param("startDate") LocalDate startDate, 

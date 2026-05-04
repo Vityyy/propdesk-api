@@ -22,6 +22,7 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final OwnerRepository ownerRepository;
     private final AdminRepository adminRepository;
+    private final devs.group5.rms.repositories.ApartmentRepository apartmentRepository;
 
     private void validateApartmentsData(List<ApartmentRangeData> apartmentsData) {
         for (int i = 0; i < apartmentsData.size(); i++) {
@@ -136,6 +137,15 @@ public class PropertyService {
         val property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
         ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, property.getOwner().getId());
-        propertyRepository.delete(property);
+        if (property.isDeleted()) {
+            return;
+        }
+        property.setDeleted(true);
+        val apartments = apartmentRepository.findByProperty_Id(propertyId);
+        for (val apartment : apartments) {
+            apartment.setDeleted(true);
+        }
+        apartmentRepository.saveAll(apartments);
+        propertyRepository.save(property);
     }
 }
