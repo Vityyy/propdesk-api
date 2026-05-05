@@ -17,4 +17,6 @@ public interface OwnerRepository extends JpaRepository<Owner, UUID> {
     List<Owner> findByAdmin_IdAndAdminAssociationAcceptedFalse(UUID adminId);
 
     List<Owner> findByAdmin_IdAndAdminAssociationAcceptedTrue(UUID adminId);
+
+    boolean existsByIdAndAdmin_Id(UUID id, UUID id1);
 }
