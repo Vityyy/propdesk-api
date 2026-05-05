@@ -3,8 +3,8 @@ package devs.group5.rms.services;
 import devs.group5.rms.entities.Admin;
 import devs.group5.rms.entities.Owner;
 import devs.group5.rms.entities.Property;
-import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.AdminRepository;
+import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.PropertyRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -61,7 +61,7 @@ public class AdminService {
             throw new RuntimeException("Admin does not manage this owner");
         }
 
-        return propertyRepository.findByOwner_Id(ownerId);
+        return propertyRepository.findByOwner_IdAndIsDeletedFalse(ownerId);
     }
 
     // Accepts an owner request that was previously sent to the authenticated admin.

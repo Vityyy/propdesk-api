@@ -58,4 +58,8 @@ public class Property {
     @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "property", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Apartment> apartments = new java.util.ArrayList<>();
+
+    @Builder.Default
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 }

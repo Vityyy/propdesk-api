@@ -120,7 +120,7 @@ public class ApartmentService {
             UUID ownerId
     ) {
         ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, ownerId);
-        return apartmentRepository.findByProperty_Owner_Id(ownerId);
+        return apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId);
     }
 
     @Transactional
@@ -208,70 +208,112 @@ public class ApartmentService {
         if (request.squareMeters() != null) {
             apartment.setSquareMeters(request.squareMeters());
         }
-        if (request.dueDate() != null) {
-            apartment.setDueDate(request.dueDate());
-        }
-        if (request.paymentStatus() != null) {
-            int currentMonth = java.time.LocalDate.now().getMonthValue();
-            int currentYear = java.time.LocalDate.now().getYear();
 
-            if (request.paymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID && apartment.getPaymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID) {
-                val existingPayment = paymentRepository.findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
-                        apartment.getId(), devs.group5.rms.entities.PaymentType.RENT, currentYear, currentMonth);
-                
-                if (existingPayment.isEmpty()) {
-                    val payment = devs.group5.rms.entities.Payment.builder()
-                            .apartment(apartment)
-                            .amount(apartment.getRent())
-                            .paymentDate(java.time.LocalDate.now())
-                            .billingMonth(currentMonth)
-                            .billingYear(currentYear)
-                            .type(devs.group5.rms.entities.PaymentType.RENT)
-                            .isCancelled(false)
-                            .build();
-                    paymentRepository.save(payment);
-                }
-
-                // Generate MAINTENANCE_FEE payments for the month
-                for (val fee : apartment.getMaintenanceFees()) {
-                    val existingFeePayment = paymentRepository.findAllByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
-                            apartment.getId(), devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE, currentYear, currentMonth)
-                            .stream().filter(p -> p.getAmount().compareTo(fee.getAmount()) == 0).findFirst();
-                    
-                    if (existingFeePayment.isEmpty()) {
-                        val feePayment = devs.group5.rms.entities.Payment.builder()
-                                .apartment(apartment)
-                                .amount(fee.getAmount())
-                                .paymentDate(java.time.LocalDate.now())
-                                .billingMonth(currentMonth)
-                                .billingYear(currentYear)
-                                .type(devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE)
-                                .isCancelled(false)
-                                .build();
-                        paymentRepository.save(feePayment);
-                    }
-                }
-            } else if (request.paymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID && apartment.getPaymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID) {
-                val existingPayment = paymentRepository.findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
-                        apartment.getId(), devs.group5.rms.entities.PaymentType.RENT, currentYear, currentMonth);
-                
-                existingPayment.ifPresent(payment -> {
-                    payment.setCancelled(true);
-                    paymentRepository.save(payment);
-                });
-
-                // Cancel MAINTENANCE_FEE payments for the month
-                val existingFeePayments = paymentRepository.findAllByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
-                        apartment.getId(), devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE, currentYear, currentMonth);
-                for (val feePayment : existingFeePayments) {
-                    feePayment.setCancelled(true);
-                    paymentRepository.save(feePayment);
-                }
-            }
-            apartment.setPaymentStatus(request.paymentStatus());
-        }
+        handleDueDateChange(apartment, request);
+        handlePaymentStatusChange(apartment, request);
 
         return apartmentRepository.save(apartment);
+    }
+
+    private void handleDueDateChange(devs.group5.rms.entities.Apartment apartment, devs.group5.rms.dtos.ApartmentUpdateRequest request) {
+        if (request.dueDate() == null) {
+            return;
+        }
+
+        apartment.setDueDate(request.dueDate());
+
+        if (request.paymentStatus() != null) {
+            return;
+        }
+
+        if (request.dueDate().isBefore(java.time.LocalDate.now())) {
+            if (apartment.getPaymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID) {
+                cancelMonthlyPayments(apartment, java.time.LocalDate.now());
+            }
+            apartment.setPaymentStatus(devs.group5.rms.entities.PaymentStatus.OVERDUE);
+            return;
+        }
+
+        if (apartment.getPaymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID) {
+            ensureMonthlyPayments(apartment, java.time.LocalDate.now());
+        }
+        apartment.setPaymentStatus(devs.group5.rms.entities.PaymentStatus.PAID);
+    }
+
+    private void handlePaymentStatusChange(devs.group5.rms.entities.Apartment apartment, devs.group5.rms.dtos.ApartmentUpdateRequest request) {
+        if (request.paymentStatus() == null) {
+            return;
+        }
+
+        if (request.paymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID
+                && apartment.getPaymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID) {
+            ensureMonthlyPayments(apartment, java.time.LocalDate.now());
+        } else if (request.paymentStatus() != devs.group5.rms.entities.PaymentStatus.PAID
+                && apartment.getPaymentStatus() == devs.group5.rms.entities.PaymentStatus.PAID) {
+            cancelMonthlyPayments(apartment, java.time.LocalDate.now());
+        }
+
+        apartment.setPaymentStatus(request.paymentStatus());
+    }
+
+    private void ensureMonthlyPayments(devs.group5.rms.entities.Apartment apartment, java.time.LocalDate paymentDate) {
+        int currentMonth = paymentDate.getMonthValue();
+        int currentYear = paymentDate.getYear();
+
+        val existingPayment = paymentRepository.findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                apartment.getId(), devs.group5.rms.entities.PaymentType.RENT, currentYear, currentMonth);
+
+        if (existingPayment.isEmpty()) {
+            val payment = devs.group5.rms.entities.Payment.builder()
+                    .apartment(apartment)
+                    .amount(apartment.getRent())
+                    .paymentDate(paymentDate)
+                    .billingMonth(currentMonth)
+                    .billingYear(currentYear)
+                    .type(devs.group5.rms.entities.PaymentType.RENT)
+                    .isCancelled(false)
+                    .build();
+            paymentRepository.save(payment);
+        }
+
+        for (val fee : apartment.getMaintenanceFees()) {
+            val existingFeePayment = paymentRepository.findAllByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                    apartment.getId(), devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE, currentYear, currentMonth)
+                    .stream().filter(p -> p.getAmount().compareTo(fee.getAmount()) == 0).findFirst();
+
+            if (existingFeePayment.isEmpty()) {
+                val feePayment = devs.group5.rms.entities.Payment.builder()
+                        .apartment(apartment)
+                        .amount(fee.getAmount())
+                        .paymentDate(paymentDate)
+                        .billingMonth(currentMonth)
+                        .billingYear(currentYear)
+                        .type(devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE)
+                        .isCancelled(false)
+                        .build();
+                paymentRepository.save(feePayment);
+            }
+        }
+    }
+
+    private void cancelMonthlyPayments(devs.group5.rms.entities.Apartment apartment, java.time.LocalDate paymentDate) {
+        int currentMonth = paymentDate.getMonthValue();
+        int currentYear = paymentDate.getYear();
+
+        val existingPayment = paymentRepository.findByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                apartment.getId(), devs.group5.rms.entities.PaymentType.RENT, currentYear, currentMonth);
+
+        existingPayment.ifPresent(payment -> {
+            payment.setCancelled(true);
+            paymentRepository.save(payment);
+        });
+
+        val existingFeePayments = paymentRepository.findAllByApartmentIdAndTypeAndBillingYearAndBillingMonthAndIsCancelledFalse(
+                apartment.getId(), devs.group5.rms.entities.PaymentType.MAINTENANCE_FEE, currentYear, currentMonth);
+        for (val feePayment : existingFeePayments) {
+            feePayment.setCancelled(true);
+            paymentRepository.save(feePayment);
+        }
     }
 
     @Transactional
@@ -325,7 +367,12 @@ public class ApartmentService {
 
         ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, apartment.getProperty().getOwner().getId());
 
-        apartmentRepository.delete(apartment);
+        if (apartment.isDeleted()) {
+            return;
+        }
+
+        apartment.setDeleted(true);
+        apartmentRepository.save(apartment);
     }
 
     // ─── Tenant management ───────────────────────────────────────────────────
@@ -408,7 +455,7 @@ public class ApartmentService {
         apartmentRepository.save(apartment);
 
         // If tenant has no more apartments, remove them from DB entirely
-        val remainingApartments = apartmentRepository.findByTenant_Id(tenant.getId());
+        val remainingApartments = apartmentRepository.findByTenant_IdAndIsDeletedFalse(tenant.getId());
         if (remainingApartments.isEmpty()) {
             tenantRepository.delete(tenant);
         }

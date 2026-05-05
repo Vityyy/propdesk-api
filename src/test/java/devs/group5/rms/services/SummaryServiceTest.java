@@ -85,7 +85,7 @@ class SummaryServiceTest {
                 .rent(new BigDecimal("1000"))
                 .build();
 
-        when(apartmentRepository.findByProperty_Owner_Id(ownerId)).thenReturn(List.of(paidApt, pendingApt));
+        when(apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId)).thenReturn(List.of(paidApt, pendingApt));
 
         SummaryResponse response = summaryService.getSummary(ownerId, Role.OWNER, ownerId);
 
