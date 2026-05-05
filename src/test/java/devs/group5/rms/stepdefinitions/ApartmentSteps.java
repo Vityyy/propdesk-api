@@ -4,9 +4,11 @@ import devs.group5.rms.controllers.ApartmentController;
 import devs.group5.rms.dtos.ApartmentRequest;
 import devs.group5.rms.dtos.ApartmentResponse;
 import devs.group5.rms.entities.Property;
+import devs.group5.rms.entities.Role;
 import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.PropertyRepository;
 import devs.group5.rms.services.AuthService;
+import devs.group5.rms.services.JwtService;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -33,6 +35,9 @@ public class ApartmentSteps {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private OwnerRepository ownerRepository;
@@ -66,17 +71,19 @@ public class ApartmentSteps {
             var owner = ownerRepository.findAll().stream().filter(o -> o.getName().equals(ownerName)).findFirst().orElseThrow();
             var property = propertyRepository.findAll().stream().filter(p -> p.getName().equals(propName) && p.getOwner().getId().equals(owner.getId())).findFirst().orElseThrow();
 
-            // Build a Jwt with subject = owner id
-            // Jwt requires at least one header entry; provide a simple alg header for the test
-            Map<String, Object> headers = Map.of("alg", "none");
-            Map<String, Object> claims = Map.of("sub", owner.getId().toString());
-            Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600), headers, claims);
+            String tokenValue = jwtService.generateAccessToken(owner);
+            Jwt jwt = new Jwt(
+                    tokenValue,
+                    Instant.now(),
+                    Instant.now().plusSeconds(3600),
+                    Map.of("alg", "HS256"),
+                    Map.of("sub", owner.getId().toString(), "role", Role.OWNER.name())
+            );
 
-            // Create an Authentication with ROLE_OWNER so the @PreAuthorize check in OwnerService passes
-            var authToken = new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("ROLE_OWNER")));
+            var authToken = new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("ROLE_" + Role.OWNER.name())));
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            ApartmentRequest req = new ApartmentRequest(apartmentNumber, property.getId(), new BigDecimal(amount));
+            ApartmentRequest req = new ApartmentRequest(apartmentNumber, property.getId(), new BigDecimal(amount), null, null);
             response = apartmentController.addApartment(jwt, List.of(req));
             // clear context to avoid leaking auth between scenarios
             SecurityContextHolder.clearContext();

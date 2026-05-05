@@ -16,6 +16,7 @@ public record ApartmentWithTenantData(
         BigDecimal squareMeters,
         BigDecimal rent,
         TenantData tenant,
-        List<ApartmentExpenseData> expenses
+        List<ApartmentExpenseData> expenses,
+        List<MaintenanceFeeData> maintenanceFees
 ) {
 }

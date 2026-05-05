@@ -2,6 +2,7 @@ package devs.group5.rms.services;
 
 import devs.group5.rms.data.ApartmentData;
 import devs.group5.rms.data.PropertyData;
+import devs.group5.rms.dtos.OwnerAdminAssociationResponse;
 import devs.group5.rms.dtos.PropertyApartmentsResponse;
 import devs.group5.rms.entities.Admin;
 import devs.group5.rms.entities.Apartment;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,11 +34,11 @@ public class OwnerService {
 
     @PreAuthorize("hasRole('OWNER')")
     public List<Property> getProperties(@NonNull UUID ownerId) {
-        return propertyRepository.findByOwner_Id(ownerId);
+        return propertyRepository.findByOwner_IdAndIsDeletedFalse(ownerId);
     }
 
     public List<Apartment> getApartments(@NonNull UUID ownerId) {
-        return apartmentRepository.findByProperty_Owner_Id(ownerId);
+        return apartmentRepository.findByProperty_Owner_IdAndIsDeletedFalse(ownerId);
     }
 
     @PreAuthorize("hasRole('OWNER')")
@@ -69,7 +71,17 @@ public class OwnerService {
             throw new RuntimeException("Property does not belong to authenticated user");
         }
 
-        propertyRepository.delete(property);
+        if (property.isDeleted()) {
+            return;
+        }
+
+        property.setDeleted(true);
+        var apartments = apartmentRepository.findByProperty_Id(propertyId);
+        for (var apartment : apartments) {
+            apartment.setDeleted(true);
+        }
+        apartmentRepository.saveAll(apartments);
+        propertyRepository.save(property);
     }
 
     @PreAuthorize("hasRole('OWNER')")
@@ -101,7 +113,7 @@ public class OwnerService {
             throw new RuntimeException("Property does not belong to authenticated user");
         }
 
-        return apartmentRepository.findByProperty_Id(propertyId)
+        return apartmentRepository.findByProperty_IdAndIsDeletedFalse(propertyId)
                 .stream()
                 .map(apartment -> new PropertyApartmentsResponse(
                         apartment.getId(),
@@ -133,9 +145,34 @@ public class OwnerService {
             throw new IllegalArgumentException("Admin cut must be positive");
         }
 
+        if (Boolean.TRUE.equals(owner.getAdminAssociationAccepted())) {
+            throw new IllegalArgumentException("Owner is already associated with an admin");
+        }
+
         owner.setAdmin(admin);
         owner.setAdminCut(adminCut);
+        owner.setAdminAssociationAccepted(false);
 
         return ownerRepository.save(owner);
+    }
+
+    @PreAuthorize("hasRole('OWNER')")
+    @Transactional
+    public Optional<OwnerAdminAssociationResponse> getAssociatedAdmin(@NonNull UUID authenticatedUserId) {
+        Owner owner = ownerRepository.findById(authenticatedUserId)
+                .orElseThrow(() -> new RuntimeException("Owner does not exist"));
+
+        if (owner.getAdmin() == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new OwnerAdminAssociationResponse(
+                owner.getId(),
+                owner.getName(),
+                owner.getAdmin().getId(),
+                owner.getAdmin().getName(),
+                owner.getAdminCut(),
+                owner.getAdminAssociationAccepted()
+        ));
     }
 }

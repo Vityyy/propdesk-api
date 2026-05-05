@@ -2,16 +2,22 @@ package devs.group5.rms.controllers;
 
 import devs.group5.rms.dtos.AssociateAdminRequest;
 import devs.group5.rms.dtos.OwnerAdminAssociationResponse;
+import devs.group5.rms.dtos.SummaryResponse;
 import devs.group5.rms.services.OwnerService;
+import devs.group5.rms.services.SummaryService;
+import devs.group5.rms.services.JwtService;
 import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
@@ -21,8 +27,19 @@ import java.util.UUID;
 @AllArgsConstructor(onConstructor_ = @Autowired)
 public class OwnerController {
     private final OwnerService ownerService;
+    private final SummaryService summaryService;
+    private final JwtService jwtService;
 
-    // Associates the authenticated owner with the chosen admin account.
+    @GetMapping("/me/admin")
+    public ResponseEntity<OwnerAdminAssociationResponse> getAssociatedAdmin(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ownerService.getAssociatedAdmin(UUID.fromString(jwt.getSubject()))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    // Sends an association request from the authenticated owner to the chosen admin.
     @PostMapping("/me/admin")
     public OwnerAdminAssociationResponse associateAdmin(
             @AuthenticationPrincipal Jwt jwt,
@@ -39,7 +56,18 @@ public class OwnerController {
                 owner.getName(),
                 owner.getAdmin().getId(),
                 owner.getAdmin().getName(),
-                owner.getAdminCut()
+                owner.getAdminCut(),
+                owner.getAdminAssociationAccepted()
         );
+    }
+
+    @GetMapping("/{ownerId}/summary")
+    public SummaryResponse getSummary(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID ownerId
+    ) {
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        return summaryService.getSummary(authenticatedUserId, authenticatedUserRole, ownerId);
     }
 }

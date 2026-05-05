@@ -35,7 +35,7 @@ public class ApartmentController {
                     val apartment = apartmentService.addApartment(
                             authenticatedUserId,
                             authenticatedUserRole,
-                            new ApartmentData(r.number(), r.propertyId(), r.amount_due())
+                            new ApartmentData(r.number(), r.propertyId(), r.amount_due(), r.dueDate(), r.paymentStatus())
                     );
                     return new ApartmentResponse(apartment.getId(), apartment.getNumber(), apartment.getProperty().getId());
                 })
@@ -179,5 +179,42 @@ public class ApartmentController {
         val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
         val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
         apartmentService.deleteExpenseFromApartment(authenticatedUserId, authenticatedUserRole, apartmentId, expenseId);
+    }
+
+    // ─── Maintenance Fee endpoints ───────────────────────────────────────────
+
+    @GetMapping("/{apartmentId}/maintenance-fees")
+    public List<MaintenanceFeeResponse> getMaintenanceFees(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID apartmentId
+    ) {
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        return apartmentService.getMaintenanceFeesForApartment(authenticatedUserId, authenticatedUserRole, apartmentId).stream()
+                .map(f -> new MaintenanceFeeResponse(f.id(), f.category(), f.description(), f.amount()))
+                .toList();
+    }
+
+    @PostMapping("/{apartmentId}/maintenance-fees")
+    public MaintenanceFeeResponse addMaintenanceFee(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID apartmentId,
+            @RequestBody MaintenanceFeeRequest request
+    ) {
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        val data = apartmentService.addMaintenanceFeeToApartment(authenticatedUserId, authenticatedUserRole, apartmentId, request);
+        return new MaintenanceFeeResponse(data.id(), data.category(), data.description(), data.amount());
+    }
+
+    @DeleteMapping("/{apartmentId}/maintenance-fees/{maintenanceFeeId}")
+    public void deleteMaintenanceFee(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID apartmentId,
+            @PathVariable UUID maintenanceFeeId
+    ) {
+        val authenticatedUserId = jwtService.extractUserId(jwt.getTokenValue());
+        val authenticatedUserRole = jwtService.extractUserRole(jwt.getTokenValue());
+        apartmentService.deleteMaintenanceFeeFromApartment(authenticatedUserId, authenticatedUserRole, apartmentId, maintenanceFeeId);
     }
 }

@@ -22,6 +22,7 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final OwnerRepository ownerRepository;
     private final AdminRepository adminRepository;
+    private final devs.group5.rms.repositories.ApartmentRepository apartmentRepository;
 
     private void validateApartmentsData(List<ApartmentRangeData> apartmentsData) {
         for (int i = 0; i < apartmentsData.size(); i++) {
@@ -46,7 +47,7 @@ public class PropertyService {
                                 .squareMeters(apartmentsRange.squareMeters())
                                 .floor(floor)
                                 .rent(apartmentsRange.rentValue())
-                                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PAID)
+                                .paymentStatus(devs.group5.rms.entities.PaymentStatus.PENDING)
                                 .property(property)
                                 .build()
                         )
@@ -69,7 +70,7 @@ public class PropertyService {
             return;
         }
 
-        if (!ownerRepository.existsByIdAndAdmin_Id(ownerId, authenticatedUserId)) {
+        if (!ownerRepository.existsByIdAndAdmin_IdAndAdminAssociationAcceptedTrue(ownerId, authenticatedUserId)) {
             throw new IllegalArgumentException("Admin does not manage this owner");
         }
     }
@@ -84,7 +85,7 @@ public class PropertyService {
     ) {
         val owner = switch (authenticatedUserRole) {
             case ADMIN -> ownerRepository
-                    .findByIdAndAdmin_Id(ownerId, authenticatedUserId)
+                    .findByIdAndAdmin_IdAndAdminAssociationAcceptedTrue(ownerId, authenticatedUserId)
                     .orElseThrow(() -> new IllegalArgumentException("Admin %s does not work with owner %s".formatted(authenticatedUserId, ownerId)));
 
             case OWNER -> {
@@ -136,6 +137,15 @@ public class PropertyService {
         val property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
         ensureCanManageOwner(authenticatedUserId, authenticatedUserRole, property.getOwner().getId());
-        propertyRepository.delete(property);
+        if (property.isDeleted()) {
+            return;
+        }
+        property.setDeleted(true);
+        val apartments = apartmentRepository.findByProperty_Id(propertyId);
+        for (val apartment : apartments) {
+            apartment.setDeleted(true);
+        }
+        apartmentRepository.saveAll(apartments);
+        propertyRepository.save(property);
     }
 }

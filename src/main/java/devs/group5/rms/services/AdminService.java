@@ -4,6 +4,7 @@ import devs.group5.rms.entities.Admin;
 import devs.group5.rms.entities.Owner;
 import devs.group5.rms.entities.Property;
 import devs.group5.rms.repositories.AdminRepository;
+import devs.group5.rms.repositories.OwnerRepository;
 import devs.group5.rms.repositories.PropertyRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor(onConstructor_ = @Autowired)
 public class AdminService {
     private final AdminRepository adminRepository;
+    private final OwnerRepository ownerRepository;
     private final PropertyRepository propertyRepository;
 
     // Returns available admins so owners can choose who to associate with.
@@ -31,10 +33,20 @@ public class AdminService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public List<Owner> getAdminOwners(@NonNull UUID authenticatedAdminId) {
-        val admin = adminRepository.findById(authenticatedAdminId)
+        adminRepository.findById(authenticatedAdminId)
                 .orElseThrow(() -> new RuntimeException("Admin does not exist"));
 
-        return admin.getOwners().stream().toList();
+        return ownerRepository.findByAdmin_IdAndAdminAssociationAcceptedTrue(authenticatedAdminId);
+    }
+
+    // Returns owner association requests waiting for the authenticated admin approval.
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public List<Owner> getPendingOwnerRequests(@NonNull UUID authenticatedAdminId) {
+        adminRepository.findById(authenticatedAdminId)
+                .orElseThrow(() -> new RuntimeException("Admin does not exist"));
+
+        return ownerRepository.findByAdmin_IdAndAdminAssociationAcceptedFalse(authenticatedAdminId);
     }
 
     // Returns properties for a specific owner, validating that the admin manages this owner
@@ -45,13 +57,32 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Admin does not exist"));
 
         // Validate that this admin manages the requested owner
-        boolean hasOwner = admin.getOwners().stream()
-                .anyMatch(owner -> owner.getId().equals(ownerId));
-
-        if (!hasOwner) {
+        if (!ownerRepository.existsByIdAndAdmin_IdAndAdminAssociationAcceptedTrue(ownerId, authenticatedAdminId)) {
             throw new RuntimeException("Admin does not manage this owner");
         }
 
-        return propertyRepository.findByOwner_Id(ownerId);
+        return propertyRepository.findByOwner_IdAndIsDeletedFalse(ownerId);
+    }
+
+    // Accepts an owner request that was previously sent to the authenticated admin.
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public Owner acceptOwnerRequest(
+            @NonNull UUID authenticatedAdminId,
+            @NonNull UUID ownerId
+    ) {
+        Admin admin = adminRepository.findById(authenticatedAdminId)
+                .orElseThrow(() -> new RuntimeException("Admin does not exist"));
+
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("Owner does not exist"));
+
+        if (owner.getAdmin() == null || !owner.getAdmin().getId().equals(admin.getId())) {
+            throw new IllegalArgumentException("Owner did not request association with this admin");
+        }
+
+        owner.setAdminAssociationAccepted(true);
+
+        return ownerRepository.save(owner);
     }
 }

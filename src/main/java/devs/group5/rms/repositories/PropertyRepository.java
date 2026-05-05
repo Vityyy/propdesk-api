@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface PropertyRepository extends JpaRepository<Property, UUID> {
     List<Property> findByOwner_Id(UUID ownerId);
+    List<Property> findByOwner_IdAndIsDeletedFalse(UUID ownerId);
 }

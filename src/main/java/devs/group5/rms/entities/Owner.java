@@ -24,6 +24,9 @@ public class Owner extends User {
     @Column(name = "admin_cut")
     private BigDecimal adminCut;
 
+    @Column(name = "admin_association_accepted", nullable = false)
+    private Boolean adminAssociationAccepted = false;
+
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Property> properties;
 
