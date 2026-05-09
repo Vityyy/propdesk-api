@@ -85,4 +85,28 @@ public class AdminService {
 
         return ownerRepository.save(owner);
     }
+
+    // Rejects an owner request that was previously sent to the authenticated admin.
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public void rejectOwnerRequest(
+            @NonNull UUID authenticatedAdminId,
+            @NonNull UUID ownerId
+    ) {
+        Admin admin = adminRepository.findById(authenticatedAdminId)
+                .orElseThrow(() -> new RuntimeException("Admin does not exist"));
+
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("Owner does not exist"));
+
+        if (owner.getAdmin() == null || !owner.getAdmin().getId().equals(admin.getId())) {
+            throw new IllegalArgumentException("Owner did not request association with this admin");
+        }
+
+        // Clear the admin association
+        owner.setAdmin(null);
+        owner.setAdminAssociationAccepted(false);
+
+        ownerRepository.save(owner);
+    }
 }
