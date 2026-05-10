@@ -41,7 +41,7 @@ public class TenantService {
             apartmentRepository.save(apartment);
         }
 
-        val remaining = apartmentRepository.findByTenant_Id(tenantId);
+        val remaining = apartmentRepository.findActiveByTenantId(tenantId);
         if (remaining.isEmpty()) {
             tenantRepository.delete(tenant);
         }

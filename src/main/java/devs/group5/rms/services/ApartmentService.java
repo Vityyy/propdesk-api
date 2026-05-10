@@ -455,7 +455,7 @@ public class ApartmentService {
         apartmentRepository.save(apartment);
 
         // If tenant has no more apartments, remove them from DB entirely
-        val remainingApartments = apartmentRepository.findByTenant_IdAndIsDeletedFalse(tenant.getId());
+        val remainingApartments = apartmentRepository.findActiveByTenantId(tenant.getId());
         if (remainingApartments.isEmpty()) {
             tenantRepository.delete(tenant);
         }
