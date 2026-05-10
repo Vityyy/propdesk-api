@@ -12,6 +12,7 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -80,6 +81,7 @@ public class PropertyService {
             Role authenticatedUserRole,
             String propertyName,
             String propertyAddress,
+            URL imageUrl,
             UUID ownerId,
             List<ApartmentRangeData> apartmentRanges
     ) {
@@ -105,6 +107,7 @@ public class PropertyService {
                 .builder()
                 .name(propertyName)
                 .address(propertyAddress)
+                .imageUrl(imageUrl)
                 .owner(owner)
                 .build();
 
