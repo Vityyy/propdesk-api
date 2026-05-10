@@ -195,7 +195,8 @@ public class PropertyController {
                 jwtService.extractUserRole(jwt.getTokenValue()),
                 propertyId,
                 request.propertyName(),
-                request.propertyAddress()
+                request.propertyAddress(),
+                request.pictureUrl()
         );
 
         return new PropertyResponse(

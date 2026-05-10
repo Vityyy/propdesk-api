@@ -119,7 +119,7 @@ public class PropertyService {
     }
 
     @org.springframework.transaction.annotation.Transactional
-    public Property updateProperty(UUID authenticatedUserId, Role authenticatedUserRole, UUID propertyId, String newName, String newAddress) {
+    public Property updateProperty(UUID authenticatedUserId, Role authenticatedUserRole, UUID propertyId, String newName, String newAddress, URL newImageUrl) {
         val property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
 
@@ -130,6 +130,9 @@ public class PropertyService {
         }
         if (newAddress != null && !newAddress.trim().isEmpty()) {
             property.setAddress(newAddress);
+        }
+        if (newImageUrl != null) {
+            property.setImageUrl(newImageUrl);
         }
 
         return propertyRepository.save(property);
