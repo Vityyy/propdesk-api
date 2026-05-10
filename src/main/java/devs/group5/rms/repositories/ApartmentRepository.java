@@ -45,4 +45,12 @@ public interface ApartmentRepository extends JpaRepository<Apartment, UUID> {
     List<Apartment> findByProperty_IdAndIsDeletedFalse(UUID propertyId);
 
     List<Apartment> findByTenant_IdAndIsDeletedFalse(UUID tenantId);
+
+    @Query("""
+            SELECT a FROM Apartment a
+            WHERE a.tenant.id = :tenantId
+              AND a.isDeleted = false
+              AND a.property.isDeleted = false
+            """)
+    List<Apartment> findActiveByTenantId(@Param("tenantId") UUID tenantId);
 }
