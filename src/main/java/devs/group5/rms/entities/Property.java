@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,6 +49,9 @@ public class Property {
     @NotBlank
     @Column(nullable = false, name = "address")
     private String address;
+
+    @Column(name = "image_url")
+    private URL imageUrl;
 
     @NotNull
     @ToString.Exclude
