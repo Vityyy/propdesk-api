@@ -26,7 +26,6 @@ import java.util.UUID;
 public class AdminController {
     private final AdminService adminService;
 
-    // Lists registered admins so owners can pick one from the UI.
     @GetMapping
     public List<UserResponse> listAdmins() {
         val admins = adminService.getAdmins();
@@ -36,7 +35,6 @@ public class AdminController {
                 .toList();
     }
 
-    // Lists all owners linked to the authenticated admin
     @GetMapping("/me/owners")
     public List<UserResponse> getMyOwners(
             @AuthenticationPrincipal Jwt jwt
@@ -48,7 +46,6 @@ public class AdminController {
                 .toList();
     }
 
-    // Lists pending owner association requests for the authenticated admin.
     @GetMapping("/me/owner-requests")
     public List<OwnerAssociationRequestResponse> getPendingOwnerRequests(
             @AuthenticationPrincipal Jwt jwt
@@ -64,7 +61,6 @@ public class AdminController {
                 .toList();
     }
 
-    // Accepts an owner association request for the authenticated admin.
     @PostMapping("/me/owners/{ownerId}/accept")
     public OwnerAdminAssociationResponse acceptOwnerRequest(
             @AuthenticationPrincipal Jwt jwt,
@@ -85,7 +81,6 @@ public class AdminController {
         );
     }
 
-    // Rejects an owner association request for the authenticated admin.
     @DeleteMapping("/me/owner-requests/{ownerId}")
     public void rejectOwnerRequest(
             @AuthenticationPrincipal Jwt jwt,
