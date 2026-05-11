@@ -28,10 +28,10 @@ public class AuthService {
     public User authenticate(String name, String password) {
         val user = userRepository
                 .findByName(name)
-                .orElseThrow(() -> new BadCredentialsException("Could not find user with name %s".formatted(name)));
+                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("Invalid password %s for user with id %s".formatted(name, password));
+            throw new BadCredentialsException("Invalid username or password");
         }
 
         return user;
@@ -53,11 +53,15 @@ public class AuthService {
     }
 
     private void validateRegister(String name, String password) {
-        if (password.isEmpty()) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name cannot be blank");
+        }
+
+        if (password == null || password.isBlank()) {
             throw new IllegalArgumentException("Password cannot be blank");
         }
 
-        if (adminRepository.existsByName(name)) {
+        if (userRepository.existsByName(name)) {
             throw new EntityExistsException();
         }
     }
