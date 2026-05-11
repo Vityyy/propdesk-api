@@ -2,13 +2,14 @@ package devs.group5.rms.dtos;
 
 import devs.group5.rms.data.ApartmentRangeData;
 
+import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
 public record PropertyRequest(
         String propertyName,
         String propertyAddress,
-        String pictureUrl,
+        URL pictureUrl,
         UUID ownerId,
         List<ApartmentRangeData> apartmentRanges
 ) {

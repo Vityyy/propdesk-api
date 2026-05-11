@@ -50,6 +50,7 @@ public class PropertyController {
                 jwtService.extractUserRole(jwt.getTokenValue()),
                 request.propertyName(),
                 request.propertyAddress(),
+                request.pictureUrl(),
                 request.ownerId(),
                 request.apartmentRanges()
         );
@@ -58,6 +59,7 @@ public class PropertyController {
                 property.getId(),
                 property.getName(),
                 property.getAddress(),
+                property.getImageUrl(),
                 property.getOwner().getId()
         );
     }
@@ -85,6 +87,7 @@ public class PropertyController {
                             r.getId(),
                             r.getName(),
                             r.getAddress(),
+                            r.getImageUrl(),
                             r.getOwner().getId()
                     ))
                     .collect(Collectors.toList());
@@ -96,6 +99,7 @@ public class PropertyController {
                             r.getId(),
                             r.getName(),
                             r.getAddress(),
+                            r.getImageUrl(),
                             r.getOwner().getId()
                     ))
                     .collect(Collectors.toList());
@@ -191,13 +195,15 @@ public class PropertyController {
                 jwtService.extractUserRole(jwt.getTokenValue()),
                 propertyId,
                 request.propertyName(),
-                request.propertyAddress()
+                request.propertyAddress(),
+                request.pictureUrl()
         );
 
         return new PropertyResponse(
                 property.getId(),
                 property.getName(),
                 property.getAddress(),
+                property.getImageUrl(),
                 property.getOwner().getId()
         );
     }

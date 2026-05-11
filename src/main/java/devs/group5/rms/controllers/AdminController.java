@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -81,6 +82,18 @@ public class AdminController {
                 owner.getAdmin().getName(),
                 owner.getAdminCut(),
                 owner.getAdminAssociationAccepted()
+        );
+    }
+
+    // Rejects an owner association request for the authenticated admin.
+    @DeleteMapping("/me/owner-requests/{ownerId}")
+    public void rejectOwnerRequest(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID ownerId
+    ) {
+        adminService.rejectOwnerRequest(
+                UUID.fromString(jwt.getSubject()),
+                ownerId
         );
     }
 }
