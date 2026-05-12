@@ -322,6 +322,16 @@ Ejecutar tests:
 
 ---
 
+## Cliente frontend
+
+Este backend es consumido por un frontend separado construido con React + TypeScript:
+
+- [PropDesk Web](https://github.com/Vityyy/propdesk-web)
+
+El frontend se incluye como contexto del producto, mientras que este repositorio se enfoca en la arquitectura backend, el diseño de API, la autenticación, el modelado de datos y el pipeline de despliegue.
+
+---
+
 ## Limitaciones Actuales
 
 Este proyecto no se presenta como SaaS en producción. Las próximas mejoras backend serían:
