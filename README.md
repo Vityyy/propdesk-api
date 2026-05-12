@@ -1,5 +1,5 @@
 <p align="right">
-  <strong>English</strong> | <a href="README.es.md">Español</a>
+  <strong>🇺🇸 English</strong> | <a href="README.es.md">🇦🇷 Español</a>
 </p>
 
 # Property Management Back Office API
@@ -70,6 +70,7 @@ flowchart LR
     class Authz rule
     class Database,Flyway db
 ```
+<div align="center">
 
 | Layer | Responsibility |
 |---|---|
@@ -78,6 +79,8 @@ flowchart LR
 | Repositories | Spring Data JPA queries |
 | Entities | Relational domain model |
 | Config | Security, JWT, CORS, logging, OpenAPI toggles |
+
+</div>
 
 ---
 
