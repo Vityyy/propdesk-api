@@ -14,7 +14,6 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![JUnit](https://img.shields.io/badge/JUnit_5-25A162?style=for-the-badge&logo=junit5&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-18%20passing-22C55E?style=for-the-badge)
-![Status](https://img.shields.io/badge/status-portfolio_case_study-2563EB?style=for-the-badge)
 
 **Backend Spring Boot para propietarios y administradores de alquileres.**
 
