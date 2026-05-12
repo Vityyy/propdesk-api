@@ -2,7 +2,7 @@
   <strong>🇺🇸 English</strong> | <a href="README.es.md">🇦🇷 Español</a>
 </p>
 
-# Property Management Back Office API
+# PropDesk API
 
 <div align="center">
 
@@ -23,7 +23,7 @@
 
 ## Overview
 
-Property Management Back Office API is a backend case study for managing rental properties, apartments, tenants, payments, expenses, and delegated administrator access.
+PropDesk API is a backend case study for managing rental properties, apartments, tenants, payments, expenses, and delegated administrator access.
 
 The project started as university work and is presented here as a backend showcase, not as a production SaaS. The focus is on fundamentals: relational modeling, authentication, scoped authorization, transactional business rules, database migrations, Docker, CI, tests and, of course, languages and frameworks.
 
