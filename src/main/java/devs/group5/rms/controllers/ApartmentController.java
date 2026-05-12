@@ -108,7 +108,8 @@ public class ApartmentController {
         apartmentService.deleteApartment(authenticatedUserId, authenticatedUserRole, apartmentId);
     }
 
-    // ─── Tenant endpoints ────────────────────────────────────────────────────
+
+    // Tenant endpoints
 
     @PostMapping("/{apartmentId}/tenant")
     public TenantResponse assignTenant(
@@ -144,7 +145,8 @@ public class ApartmentController {
         apartmentService.vacateApartment(authenticatedUserId, authenticatedUserRole, apartmentId);
     }
 
-    // ─── Expense endpoints ───────────────────────────────────────────────────
+
+    // Expense endpoints
 
     @GetMapping("/{apartmentId}/expenses")
     public List<ApartmentExpenseResponse> getExpenses(
@@ -181,7 +183,8 @@ public class ApartmentController {
         apartmentService.deleteExpenseFromApartment(authenticatedUserId, authenticatedUserRole, apartmentId, expenseId);
     }
 
-    // ─── Maintenance Fee endpoints ───────────────────────────────────────────
+
+    // Maintenance Fee endpoints
 
     @GetMapping("/{apartmentId}/maintenance-fees")
     public List<MaintenanceFeeResponse> getMaintenanceFees(
