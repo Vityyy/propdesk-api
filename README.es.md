@@ -325,7 +325,7 @@ Ejecutar tests:
 
 ## Limitaciones Actuales
 
-No se presenta como SaaS en producción. Las próximas mejoras backend serían:
+Este proyecto no se presenta como SaaS en producción. Las próximas mejoras backend serían:
 
 - Separar secretos de firma para access y refresh tokens
 - Expandir validación de DTOs y normalizar respuestas de error
