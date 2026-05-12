@@ -1,5 +1,5 @@
 <p align="right">
-  <a href="README.md">English</a> | <strong>Español</strong>
+  <strong>🇦🇷 Español</strong> | <a href="README.md">🇺🇸 English</a>
 </p>
 
 # Property Management Back Office API
@@ -71,6 +71,8 @@ flowchart LR
     class Database,Flyway db
 ```
 
+<div align="center">
+
 | Capa | Responsabilidad |
 |---|---|
 | Controllers | Endpoints REST y mapeo de DTOs |
@@ -78,6 +80,8 @@ flowchart LR
 | Repositories | Queries con Spring Data JPA |
 | Entities | Modelo relacional |
 | Config | Security, JWT, CORS, logging y toggles de OpenAPI |
+
+</div>
 
 ---
 
