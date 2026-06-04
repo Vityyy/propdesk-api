@@ -231,9 +231,10 @@ class OwnerAdminAssociationIntegrationTests {
                 """
                         {
                           "name": "%s",
+                          "email": "%s",
                           "password": "%s"
                         }
-                        """.formatted(name, password),
+                        """.formatted(name, name + "@test.com", password),
                 null
         );
 
@@ -248,9 +249,10 @@ class OwnerAdminAssociationIntegrationTests {
                 """
                         {
                           "name": "%s",
+                          "email": "%s",
                           "password": "%s"
                         }
-                        """.formatted(name, password),
+                        """.formatted(name, name + "@test.com", password),
                 null
         );
 
@@ -264,10 +266,10 @@ class OwnerAdminAssociationIntegrationTests {
                 "/auth/login",
                 """
                         {
-                          "name": "%s",
+                          "email": "%s",
                           "password": "%s"
                         }
-                        """.formatted(name, password),
+                        """.formatted(name + "@test.com", password),
                 null
         );
 

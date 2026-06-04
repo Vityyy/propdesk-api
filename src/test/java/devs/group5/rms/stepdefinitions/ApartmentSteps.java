@@ -51,7 +51,7 @@ public class ApartmentSteps {
     @Given("que existe un propietario con nombre {string} y contraseña {string}")
     public void que_existe_un_propietario_con_nombre_y_contrasena(String username, String password) {
         if (ownerRepository.findAll().stream().noneMatch(o -> o.getName().equals(username))) {
-            authService.registerOwner(username, password);
+            authService.registerOwner(username, username.replace(" ", "") + "@test.com", password);
         }
     }
 

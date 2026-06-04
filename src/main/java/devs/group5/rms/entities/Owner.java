@@ -31,8 +31,8 @@ public class Owner extends User {
     private List<Property> properties;
 
     @Builder
-    private Owner(UUID id, String name, String password, Admin admin, List<Property> properties) {
-        super(id, name, password);
+    private Owner(UUID id, String name, String email, String password, Admin admin, List<Property> properties) {
+        super(id, name, email, password);
         this.admin = admin;
         this.properties = properties;
     }

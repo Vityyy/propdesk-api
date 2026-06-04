@@ -25,13 +25,13 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User authenticate(String name, String password) {
+    public User authenticate(String email, String password) {
         val user = userRepository
-                .findByName(name)
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+                .findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("Invalid username or password");
+            throw new BadCredentialsException("Invalid email or password");
         }
 
         return user;
@@ -52,17 +52,21 @@ public class AuthService {
         return jwtService.generateAccessToken(user);
     }
 
-    private void validateRegister(String name, String password) {
+    private void validateRegister(String name, String email, String password) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Name cannot be blank");
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be blank");
         }
 
         if (password == null || password.isBlank()) {
             throw new IllegalArgumentException("Password cannot be blank");
         }
 
-        if (userRepository.existsByName(name)) {
-            throw new EntityExistsException();
+        if (userRepository.existsByEmail(email)) {
+            throw new EntityExistsException("Email already in use");
         }
     }
 
@@ -71,14 +75,15 @@ public class AuthService {
     }
 
     @Transactional
-    public Admin registerAdmin(String name, String password) {
-        validateRegister(name, password);
+    public Admin registerAdmin(String name, String email, String password) {
+        validateRegister(name, email, password);
 
 
         val hashedPassword = hashPassword(password);
         val admin = Admin
                 .builder()
                 .name(name)
+                .email(email)
                 .password(hashedPassword)
                 .build();
 
@@ -86,14 +91,15 @@ public class AuthService {
     }
 
     @Transactional
-    public Owner registerOwner(String name, String password) {
-        validateRegister(name, password);
+    public Owner registerOwner(String name, String email, String password) {
+        validateRegister(name, email, password);
 
 
         val hashedPassword = hashPassword(password);
         val owner = Owner
                 .builder()
                 .name(name)
+                .email(email)
                 .password(hashedPassword)
                 .build();
 

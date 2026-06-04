@@ -34,8 +34,8 @@ public class LoginSteps {
 
     @Given("que existe un usuario con nombre {string} y contraseña {string}")
     public void que_existe_un_usuario_con_nombre_y_contrasena(String username, String password) {
-        if (!userRepository.existsByName(username)) {
-            val user = authController.registerAdmin(new SignUpRequest(username, password));
+        if (!userRepository.existsByEmail(username.replace(" ", "") + "@test.com")) {
+            val user = authController.registerAdmin(new SignUpRequest(username, username.replace(" ", "") + "@test.com", password));
             this.user = userRepository.findById(user.id()).orElseThrow();
         }
     }
@@ -43,7 +43,7 @@ public class LoginSteps {
     @When("inicio sesión como {string} y con la contraseña {string}")
     public void inicio_sesion_como_y_con_la_contrasena(String username, String password) {
         try {
-            response = authController.login(new LoginRequest(username, password));
+            response = authController.login(new LoginRequest(username.replace(" ", "") + "@test.com", password));
         } catch (Exception e) {
             caughtException = e;
         }
@@ -78,7 +78,7 @@ public class LoginSteps {
 
     @Given("que no existe ningún usuario con nombre {string}")
     public void que_no_existe_ningun_usuario_con_nombre(String username) {
-        userRepository.findByName(username).ifPresent(user -> userRepository.delete(user));
+        userRepository.findByEmail(username.replace(" ", "") + "@test.com").ifPresent(user -> userRepository.delete(user));
     }
 
     @Then("obtengo un error indicando que el usuario no existe")
