@@ -41,13 +41,13 @@ public class RegisterSteps {
 
     @Given("que no existe un administrador con nombre {string}")
     public void queNoExisteUnAdministradorConNombre(String username) {
-        userRepository.findByName(username).ifPresent(user -> userRepository.delete(user));
+        userRepository.findByEmail(username.replace(" ", "") + "@test.com").ifPresent(user -> userRepository.delete(user));
     }
 
     @When("un administrador se registra como {string} con la contraseña {string}")
     public void unAdministradorSeRegistraComoConLaContraseña(String username, String password) {
         try {
-            val user = authController.registerAdmin(new SignUpRequest(username, password));
+            val user = authController.registerAdmin(new SignUpRequest(username, username.replace(" ", "") + "@test.com", password));
             this.user = userRepository.findById(user.id()).orElseThrow();
         } catch (Exception e) {
             this.caughtException = e;
@@ -56,7 +56,7 @@ public class RegisterSteps {
 
     @Then("existe un administrador con nombre {string}")
     public void existeUnAdministradorConNombre(String username) {
-        assertTrue(userRepository.existsByName(username));
+        assertTrue(userRepository.existsByEmail(username.replace(" ", "") + "@test.com"));
     }
 
     @And("existe un administrador con contraseña {string}")
@@ -72,13 +72,13 @@ public class RegisterSteps {
 
     @Given("que no existe un dueño con nombre {string}")
     public void queNoExisteUnDueñoConNombre(String username) {
-        userRepository.findByName(username).ifPresent(user -> userRepository.delete(user));
+        userRepository.findByEmail(username.replace(" ", "") + "@test.com").ifPresent(user -> userRepository.delete(user));
     }
 
     @When("un dueño se registra como {string} con la contraseña {string}")
     public void unDueñoSeRegistraComoConLaContraseña(String username, String password) {
         try {
-            val user = authController.registerOwner(new SignUpRequest(username, password));
+            val user = authController.registerOwner(new SignUpRequest(username, username.replace(" ", "") + "@test.com", password));
             this.user = userRepository.findById(user.id()).orElseThrow();
         } catch (Exception e) {
             this.caughtException = e;
@@ -87,7 +87,7 @@ public class RegisterSteps {
 
     @Then("existe un dueño con nombre {string}")
     public void existeUnDueñoConNombre(String username) {
-        assertTrue(userRepository.existsByName(username));
+        assertTrue(userRepository.existsByEmail(username.replace(" ", "") + "@test.com"));
     }
 
     @And("existe un dueño con contraseña {string}")
@@ -103,8 +103,8 @@ public class RegisterSteps {
 
     @Given("que existe un usuario con nombre {string}")
     public void queExisteUnUsuarioConNombre(String username) {
-        if (!userRepository.existsByName(username)) {
-            val user = authController.registerAdmin(new SignUpRequest(username, "123456789"));
+        if (!userRepository.existsByEmail(username.replace(" ", "") + "@test.com")) {
+            val user = authController.registerAdmin(new SignUpRequest(username, username.replace(" ", "") + "@test.com", "123456789"));
             this.user = userRepository.findById(user.id()).orElseThrow();
         }
     }
@@ -112,7 +112,7 @@ public class RegisterSteps {
     @When("un usuario se registra como {string} con la contraseña {string}")
     public void unUsuarioSeRegistraComoConLaContraseña(String username, String password) {
         try {
-            val user = authController.registerAdmin(new SignUpRequest(username, password));
+            val user = authController.registerAdmin(new SignUpRequest(username, username.replace(" ", "") + "@test.com", password));
             this.user = userRepository.findById(user.id()).orElseThrow();
             adminRepository.flush();
         } catch (Exception e) {
@@ -127,7 +127,7 @@ public class RegisterSteps {
 
     @Given("que no existe un usuario con nombre {string}")
     public void queNoExisteUnUsuarioConNombre(String username) {
-        userRepository.findByName(username).ifPresent(user -> userRepository.delete(user));
+        userRepository.findByEmail(username.replace(" ", "") + "@test.com").ifPresent(user -> userRepository.delete(user));
     }
 
     @Then("se muestra un mensaje de error indicando que es obligatorio llenar todos los campos")

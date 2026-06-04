@@ -59,9 +59,10 @@ class PropertyApartmentFlowIntegrationTests {
                 """
                         {
                           "name": "%s",
+                          "email": "%s",
                           "password": "%s"
                         }
-                        """.formatted(ownerName, password),
+                        """.formatted(ownerName, ownerName + "@test.com", password),
                 null
         );
 
@@ -76,10 +77,10 @@ class PropertyApartmentFlowIntegrationTests {
                 "/auth/login",
                 """
                         {
-                          "name": "%s",
+                          "email": "%s",
                           "password": "%s"
                         }
-                        """.formatted(ownerName, password),
+                        """.formatted(ownerName + "@test.com", password),
                 null
         );
 

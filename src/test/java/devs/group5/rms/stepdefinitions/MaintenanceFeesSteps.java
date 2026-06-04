@@ -63,8 +63,17 @@ public class MaintenanceFeesSteps {
 
     @And("an authenticated owner user {string} exists")
     public void anAuthenticatedOwnerUserExists(String email) {
+        String derivedEmail = email.contains("@") ? email : (email.replace(" ", "") + "@test.com");
+        if (userRepository.existsByEmail(derivedEmail)) {
+            authUser = ownerRepository.findAll().stream()
+                    .filter(o -> derivedEmail.equals(o.getEmail()))
+                    .findFirst()
+                    .orElseThrow();
+            return;
+        }
         Owner owner = Owner.builder()
-                .name(email) // name acts as email here
+                .name(email)
+                .email(derivedEmail)
                 .password(passwordEncoder.encode("password"))
                 .build();
         authUser = ownerRepository.save(owner);
