@@ -25,12 +25,18 @@ public abstract class User {
     private String name;
 
     @NotBlank
+    @jakarta.validation.constraints.Email
+    @Column(nullable = false, unique = true, name = "email")
+    private String email;
+
+    @NotBlank
     @Column(nullable = false, name = "password")
     private String password;
 
-    protected User(UUID id, String name, String password) {
+    protected User(UUID id, String name, String email, String password) {
         this.id = id;
         this.name = name;
+        this.email = email;
         this.password = password;
     }
 
