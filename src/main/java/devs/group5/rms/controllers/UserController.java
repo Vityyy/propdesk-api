@@ -23,6 +23,6 @@ public class UserController {
     public UserResponse getMe(@AuthenticationPrincipal Jwt jwt) {
         val userId = UUID.fromString(jwt.getSubject());
         val user = userService.getUserById(userId);
-        return new UserResponse(user.getId(), user.getName());
+        return new UserResponse(user.getId(), user.getName(), user.getEmail());
     }
 }
