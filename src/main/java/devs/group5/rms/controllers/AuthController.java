@@ -27,7 +27,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
-        val user = authService.authenticate(request.name(), request.password());
+        val user = authService.authenticate(request.email(), request.password());
 
         val accessToken = jwtService.generateAccessToken(user);
         val refreshToken = jwtService.generateRefreshToken(user);
@@ -70,17 +70,19 @@ public class AuthController {
     public UserResponse registerAdmin(@RequestBody SignUpRequest request) {
         val admin = authService.registerAdmin(
                 request.name(),
+                request.email(),
                 request.password()
         );
-        return new UserResponse(admin.getId(), admin.getName());
+        return new UserResponse(admin.getId(), admin.getName(), admin.getEmail());
     }
 
     @PostMapping("/register/owner")
     public UserResponse registerOwner(@RequestBody SignUpRequest request) {
         val owner = authService.registerOwner(
                 request.name(),
+                request.email(),
                 request.password()
         );
-        return new UserResponse(owner.getId(), owner.getName());
+        return new UserResponse(owner.getId(), owner.getName(), owner.getEmail());
     }
 }
