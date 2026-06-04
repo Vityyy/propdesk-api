@@ -31,7 +31,7 @@ public class AdminController {
         val admins = adminService.getAdmins();
 
         return admins.stream()
-                .map(admin -> new UserResponse(admin.getId(), admin.getName()))
+                .map(admin -> new UserResponse(admin.getId(), admin.getName(), admin.getEmail()))
                 .toList();
     }
 
@@ -42,7 +42,7 @@ public class AdminController {
         val owners = adminService.getAdminOwners(UUID.fromString(jwt.getSubject()));
 
         return owners.stream()
-                .map(owner -> new UserResponse(owner.getId(), owner.getName()))
+                .map(owner -> new UserResponse(owner.getId(), owner.getName(), owner.getEmail()))
                 .toList();
     }
 
